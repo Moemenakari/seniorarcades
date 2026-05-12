@@ -1,0 +1,40 @@
+# ============================================================
+# RENDER DEPLOYMENT CONFIGURATION
+# ============================================================
+# Purpose: Defines the Render.com deployment settings for the
+# NLG Arcade Hub backend API.
+#
+# How to deploy:
+#   1. Push this repo to GitHub.
+#   2. Go to https://render.com → New → Blueprint.
+#   3. Connect your GitHub repo and select this file.
+#   4. Set the environment variables listed below.
+# ============================================================
+
+services:
+  # ── BACKEND API (Node.js + Express + SQLite) ──
+  - type: web
+    name: nlg-arcade-backend
+    runtime: node
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: node server.js
+    plan: free
+
+    # Environment variables (set these in Render dashboard or via .env)
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: JWT_SECRET
+        generateValue: true  # Render auto-generates a secure random value
+      - key: DB_PATH
+        value: /opt/render/project/src/data  # Persistent disk mount path
+
+    # Persistent disk for SQLite database file
+    # Without this, the database resets on every deploy.
+    disk:
+      name: nlg-db
+      mountPath: /opt/render/project/src/data
+      sizeGB: 1

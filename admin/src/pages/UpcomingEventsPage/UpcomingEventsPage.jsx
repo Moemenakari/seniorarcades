@@ -1,0 +1,467 @@
+/**
+ * ============================================================
+ * ADMIN UPCOMING LOGISTICS PAGE
+ * ============================================================
+ * Final Graduation Project Refactor
+ * Purpose: Strategic event planning and logistics management.
+ * Handles deployment scheduling, partner deal configurations, 
+ * resource allocation (machines/staff), and live status tracking.
+ * ============================================================
+ */
+
+import React, { useState, useEffect, useRef } from 'react';
+import { 
+  Plus, Search, CalendarPlus, MapPin, Edit, Trash2, X, Users, 
+  CheckCircle, Truck, Wrench, BrainCircuit, Link2, ChevronDown, 
+  Clock, Zap, AlertCircle, Ban, Circle, Phone, Percent, Wallet, Scale 
+} from 'lucide-react';
+import axios from 'axios';
+import { API_BASE_URL as API } from '../../config';
+
+// =============================
+// LOGISTICS CONFIGURATION
+// =============================
+const STATUS_CONFIG = {
+  upcoming:  { label: 'Upcoming',   color: 'bg-yellow-100 text-yellow-700 border-yellow-200',   dot: 'bg-yellow-400',  icon: Clock },
+  soon:      { label: 'Soon',       color: 'bg-blue-100 text-blue-700 border-blue-200',          dot: 'bg-blue-500',    icon: Zap },
+  today:     { label: 'Today',      color: 'bg-orange-100 text-orange-700 border-orange-200',    dot: 'bg-orange-500',  icon: AlertCircle },
+  live:      { label: 'Live 🟢',    color: 'bg-green-100 text-green-700 border-green-200',       dot: 'bg-green-500',   icon: CheckCircle },
+  completed: { label: 'Completed',  color: 'bg-slate-100 text-slate-600 border-slate-200',       dot: 'bg-slate-400',   icon: CheckCircle },
+  cancelled: { label: 'Cancelled',  color: 'bg-red-100 text-red-600 border-red-200',             dot: 'bg-red-500',     icon: Ban },
+  pending:   { label: 'Pending',    color: 'bg-purple-100 text-purple-700 border-purple-200',    dot: 'bg-purple-500',  icon: Circle },
+};
+
+// ── UTILITY: STATUS RESOLUTION ──
+const getAutoStatus = (dateStr) => {
+  if (!dateStr) return 'upcoming';
+  const today = new Date(); today.setHours(0,0,0,0);
+  const ev = new Date(dateStr); ev.setHours(0,0,0,0);
+  const diff = Math.ceil((ev - today) / 86400000);
+  if (diff < 0)  return 'completed';
+  if (diff === 0) return 'today';
+  if (diff <= 2) return 'soon';
+  return 'upcoming';
+};
+
+const resolveStatus = (ev) => {
+  if (ev.manual_status && ev.manual_status !== 'auto') return ev.manual_status;
+  return getAutoStatus(ev.date);
+};
+
+// =============================
+// UI HELPERS (Badges & Dropdowns)
+// =============================
+const StatusBadge = ({ status }) => {
+  const cfg = STATUS_CONFIG[status] || STATUS_CONFIG.upcoming;
+  return (
+    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-sm font-black uppercase tracking-widest border ${cfg.color}`}>
+      <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
+      {cfg.label}
+    </span>
+  );
+};
+
+const StatusDropdown = ({ current, onSelect }) => {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  useEffect(() => {
+    const h = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener('mousedown', h);
+    return () => document.removeEventListener('mousedown', h);
+  }, []);
+
+  const manualOptions = ['upcoming','soon','today','live','pending','cancelled','completed'];
+  return (
+    <div ref={ref} className="relative">
+      <button onClick={() => setOpen(o => !o)} className="flex items-center gap-1 px-2.5 py-1.5 text-sm font-black uppercase tracking-widest bg-white border border-slate-200 rounded-xl hover:bg-slate-50 shadow-sm transition">
+        <StatusBadge status={current} />
+        <ChevronDown className="w-3 h-3 text-slate-400 ml-1" />
+      </button>
+      {open && (
+        <div className="absolute right-0 top-full mt-1 z-50 bg-white border border-slate-200 rounded-2xl shadow-xl p-2 min-w-[160px]">
+          <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest px-2 py-1 mb-1">Set Status</p>
+          {manualOptions.map(s => (
+            <button key={s} onClick={() => { onSelect(s); setOpen(false); }} className={`w-full text-left px-3 py-2 rounded-xl hover:bg-slate-50 flex items-center gap-2 ${current === s ? 'bg-slate-50' : ''}`}>
+              <StatusBadge status={s} />
+            </button>
+          ))}
+          <div className="border-t border-slate-100 mt-1 pt-1">
+            <button onClick={() => { onSelect('auto'); setOpen(false); }} className="w-full text-left px-3 py-2 rounded-xl hover:bg-blue-50 text-sm font-black text-blue-600 uppercase tracking-widest">
+              ↺ Auto (by date)
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// =============================
+// MAIN LOGISTICS COMPONENT
+// =============================
+const UpcomingEvents = () => {
+  // ── STATE MANAGEMENT ──
+  const [events, setEvents] = useState([]);
+  const [allPartners, setAllPartners] = useState([]);
+  const [showForm, setShowForm] = useState(false);
+  const [editingEvent, setEditingEvent] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterStatus, setFilterStatus] = useState('all');
+
+  const [form, setForm] = useState({
+    event_name: '', location: '', date: '', days: 1,
+    client_name: '', phone: '',
+    deal_type: 'Fixing Rent', rent_amount: 0,
+    company_percent: 60, partner_percent: 40,
+    machines_count: 5, workers_needed: 1,
+    transport_needed: 'Pickup Truck', extra_details: ''
+  });
+
+  // ── INITIALIZATION ──
+  useEffect(() => {
+    fetchEvents();
+    fetchPartners();
+  }, []);
+
+  const fetchEvents = () => {
+    axios.get(`${API}/events`)
+      .then(res => setEvents(res.data.filter(e => e.status === 'pending' || e.status === 'confirmed')))
+      .catch(err => console.error(err));
+  };
+
+  const fetchPartners = () => {
+    axios.get(`${API}/clients?type=event_manager`)
+      .then(res => setAllPartners(res.data))
+      .catch(() => {});
+  };
+
+  const handlePartnerSelect = (name) => {
+    const p = allPartners.find(x => x.name === name);
+    if (p) {
+      setForm(prev => ({ ...prev, client_name: p.name, phone: p.phone || '' }));
+    } else {
+      setForm(prev => ({ ...prev, client_name: name }));
+    }
+  };
+
+  const generateAIPlan = (f) => {
+    let plan = [];
+    if (f.deal_type === 'Revenue Split') {
+      plan.push(`🧠 AI Strategy: Revenue split (${f.company_percent}/${f.partner_percent}) — prioritize games with high replay value.`);
+    } else {
+      plan.push(`🧠 AI Strategy: Fixed rent agreement of $${f.rent_amount}. Objective: Maximize profit after overheads.`);
+    }
+    plan.push(`🚚 Logistics: ${f.machines_count} machines planned. Transport: ${f.transport_needed}. ${f.workers_needed} staff suggested.`);
+    plan.push(`📋 Setup: Ensure partner ${f.client_name} provides power points.`);
+    return plan.join('\n\n');
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const startDate = new Date(form.date || new Date());
+    const endDate = new Date(startDate);
+    endDate.setDate(startDate.getDate() + (parseInt(form.days) - 1));
+    
+    const aiPlan = generateAIPlan(form);
+    const admin_name = localStorage.getItem('nlg_admin') || 'System';
+    
+    const payload = {
+      ...form,
+      end_date: endDate.toISOString().split('T')[0],
+      status: 'pending',
+      admin_name,
+      notes: JSON.stringify({
+        machines_count: form.machines_count,
+        workers_needed: form.workers_needed,
+        transport_needed: form.transport_needed,
+        extra_details: form.extra_details,
+        days: form.days,
+        ai_plan: aiPlan
+      }),
+    };
+
+    try {
+      if (editingEvent) {
+        await axios.put(`${API}/events/${editingEvent.id}`, payload);
+      } else {
+        await axios.post(`${API}/events`, payload);
+      }
+      fetchEvents(); fetchPartners(); setShowForm(false); setEditingEvent(null); resetForm();
+    } catch (err) { 
+      const msg = err.response?.data?.details || err.response?.data?.error || 'Error saving event';
+      alert(msg); 
+    }
+  };
+
+  const resetForm = () => setForm({
+    event_name: '', location: '', date: '', days: 1,
+    client_name: '', phone: '',
+    deal_type: 'Fixing Rent', rent_amount: 0,
+    company_percent: 60, partner_percent: 40,
+    machines_count: 5, workers_needed: 1,
+    transport_needed: 'Pickup Truck', extra_details: ''
+  });
+
+  const handleEdit = (ev) => {
+    setEditingEvent(ev);
+    let parsedNotes = {};
+    if (ev.notes && ev.notes.startsWith('{')) { try { parsedNotes = JSON.parse(ev.notes); } catch (e) {} }
+    setForm({
+      event_name: ev.event_name || '', location: ev.location || '', date: ev.date || '',
+      days: parsedNotes.days || 1, client_name: ev.client_name || '', phone: ev.phone || '',
+      deal_type: ev.deal_type || 'Fixing Rent', rent_amount: ev.rent_amount || 0,
+      company_percent: ev.company_percent || 60, partner_percent: ev.partner_percent || 40,
+      machines_count: parsedNotes.machines_count || 5, workers_needed: parsedNotes.workers_needed || 1,
+      transport_needed: parsedNotes.transport_needed || 'Pickup Truck', extra_details: parsedNotes.extra_details || ''
+    });
+    setShowForm(true);
+  };
+
+  const handleDelete = async (id) => {
+    if (window.confirm('Delete this planned event?')) {
+      const admin_name = localStorage.getItem('nlg_admin') || 'System';
+      await axios.delete(`${API}/events/${id}`, { data: { admin_name } }); 
+      fetchEvents();
+    }
+  };
+
+  const handleStatusChange = async (ev, newStatus) => {
+    const admin_name = localStorage.getItem('nlg_admin') || 'System';
+    await axios.put(`${API}/events/${ev.id}`, { manual_status: newStatus === 'auto' ? null : newStatus, admin_name });
+    fetchEvents();
+  };
+
+  const handleGoLive = async (ev) => {
+    if (window.confirm(`Move "${ev.event_name}" to the Live Events tracker?\nIt will keep its ID: ${ev.gen_key}`)) {
+      const admin_name = localStorage.getItem('nlg_admin') || 'System';
+      await axios.put(`${API}/events/${ev.id}`, { status: 'completed', manual_status: 'live', admin_name });
+      fetchEvents();
+    }
+  };
+
+  const filteredEvents = events.filter(e => {
+    const matchSearch = (e.event_name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (e.client_name || '').toLowerCase().includes(searchQuery.toLowerCase());
+    const resolved = resolveStatus(e);
+    const matchStatus = filterStatus === 'all' || resolved === filterStatus;
+    return matchSearch && matchStatus;
+  });
+
+  return (
+    <div className="space-y-6 animate-in fade-in duration-500">
+      <div className="flex justify-between items-end">
+        <div>
+          <h2 className="text-3xl font-black text-slate-900 tracking-tighter uppercase leading-none">Upcoming Logistics</h2>
+          <p className="text-slate-400 text-sm font-medium mt-2">Sync deals, partners, and event planning in real-time.</p>
+        </div>
+        <button onClick={() => { setEditingEvent(null); resetForm(); setShowForm(true); }} className="btn-navy flex items-center gap-2">
+          <Plus className="w-4 h-4" /> Add Event Plan
+        </button>
+      </div>
+
+      {showForm && (
+        <div className="premium-card p-8 bg-slate-50/50 border-slate-200">
+          <div className="flex justify-between items-center mb-8">
+            <h3 className="text-2xl font-black text-slate-800 uppercase tracking-tight">{editingEvent ? 'Edit Deployment' : 'New Strategic Plan'}</h3>
+            <button onClick={() => setShowForm(false)} className="p-3 hover:bg-slate-200 rounded-2xl bg-white shadow-sm transition"><X className="w-6 h-6" /></button>
+          </div>
+          
+          <form onSubmit={handleSubmit} className="space-y-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+               
+               {/* Left: Partner & Basic Info */}
+               <div className="space-y-6 bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100">
+                  <div className="flex items-center gap-2 mb-2"><Users className="w-4 h-4 text-indigo-500"/> <h4 className="text-sm font-black text-slate-400 uppercase tracking-widest">Partner Information</h4></div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                     <div className="space-y-1">
+                        <label className="text-sm font-black text-slate-500 uppercase tracking-widest ml-1">Event Name</label>
+                        <input type="text" required className="premium-input" value={form.event_name} onChange={e => setForm({...form, event_name: e.target.value})} placeholder="e.g. Wedding Event" />
+                     </div>
+                     <div className="space-y-1">
+                        <label className="text-sm font-black text-slate-500 uppercase tracking-widest ml-1">Location</label>
+                        <input type="text" required className="premium-input" value={form.location} onChange={e => setForm({...form, location: e.target.value})} placeholder="e.g. Beirut Hall" />
+                     </div>
+                     <div className="space-y-1">
+                        <label className="text-sm font-black text-slate-500 uppercase tracking-widest ml-1">Partner Name</label>
+                        <input type="text" list="partner-list" required className="premium-input" value={form.client_name} onChange={e => handlePartnerSelect(e.target.value)} placeholder="Type partner name..." />
+                        <datalist id="partner-list">
+                           {allPartners.map(p => <option key={p.id} value={p.name} />)}
+                        </datalist>
+                     </div>
+                     <div className="space-y-1">
+                        <label className="text-sm font-black text-slate-500 uppercase tracking-widest ml-1">Partner Phone</label>
+                        <div className="relative">
+                           <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
+                           <input type="text" className="premium-input pl-10" value={form.phone} onChange={e => setForm({...form, phone: e.target.value})} placeholder="+961..." />
+                        </div>
+                     </div>
+                  </div>
+               </div>
+
+               {/* Right: Deal Type Configuration */}
+               <div className="space-y-6 bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100">
+                  <div className="flex items-center gap-2 mb-2"><Wallet className="w-4 h-4 text-orange-500"/> <h4 className="text-sm font-black text-slate-400 uppercase tracking-widest">Strategic Deal Configuration</h4></div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                     <div className="space-y-1 md:col-span-2">
+                        <label className="text-sm font-black text-slate-500 uppercase tracking-widest ml-1">Agreement Type</label>
+                        <div className="flex gap-2">
+                           {['Fixing Rent', 'Revenue Split'].map(type => (
+                             <button
+                               key={type}
+                               type="button"
+                               onClick={() => setForm({...form, deal_type: type})}
+                               className={`flex-1 py-3 px-4 rounded-xl text-sm font-black uppercase tracking-widest transition-all border ${
+                                 form.deal_type === type ? 'bg-[#0f172a] text-white border-[#0f172a] shadow-lg' : 'bg-slate-50 text-slate-400 border-slate-200'
+                               }`}
+                             >
+                               {type === 'Fixing Rent' ? (
+                                 <div className="flex items-center justify-center gap-2">
+                                   <Wallet className="w-4 h-4" /> Fixed Rent
+                                 </div>
+                               ) : (
+                                 <div className="flex items-center justify-center gap-2">
+                                   <Percent className="w-4 h-4" /> Split %
+                                 </div>
+                               )}
+                             </button>
+                           ))}
+                        </div>
+                     </div>
+
+                     {form.deal_type === 'Fixing Rent' ? (
+                        <div className="space-y-1 md:col-span-2">
+                           <label className="text-sm font-black text-slate-500 uppercase tracking-widest ml-1">Rent Amount ($)</label>
+                           <input type="number" required className="premium-input bg-blue-50/30 text-blue-700 font-black" value={form.rent_amount} onChange={e => setForm({...form, rent_amount: parseFloat(e.target.value)})} />
+                        </div>
+                     ) : (
+                        <>
+                           <div className="space-y-1">
+                              <label className="text-sm font-black text-slate-500 uppercase tracking-widest ml-1">Company Share %</label>
+                              <input type="number" required className="premium-input bg-green-50/30 text-green-700 font-black" value={form.company_percent} onChange={e => setForm({...form, company_percent: parseInt(e.target.value)})} />
+                           </div>
+                           <div className="space-y-1">
+                              <label className="text-sm font-black text-slate-500 uppercase tracking-widest ml-1">Partner Share %</label>
+                              <input type="number" required className="premium-input bg-orange-50/30 text-orange-700 font-black" value={form.partner_percent} onChange={e => setForm({...form, partner_percent: parseInt(e.target.value)})} />
+                           </div>
+                        </>
+                     )}
+                  </div>
+               </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+               <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 flex flex-col gap-4">
+                  <h4 className="text-sm font-black text-slate-400 uppercase tracking-widest">Timing</h4>
+                  <input type="date" required className="premium-input" value={form.date} onChange={e => setForm({...form, date: e.target.value})} />
+                  <div className="flex items-center gap-3 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                     <span className="text-sm font-black text-slate-400 uppercase">Days:</span>
+                     <input type="number" min="1" className="w-full bg-transparent font-black text-slate-900 outline-none" value={form.days} onChange={e => setForm({...form, days: e.target.value})} />
+                  </div>
+               </div>
+
+               <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 flex flex-col gap-4">
+                  <h4 className="text-sm font-black text-slate-400 uppercase tracking-widest">Machines & Staff</h4>
+                  <div className="flex justify-between items-center bg-slate-50 p-3 rounded-xl">
+                     <span className="text-sm font-black text-slate-400 uppercase">Games:</span>
+                     <input type="number" className="w-12 bg-transparent text-right font-black" value={form.machines_count} onChange={e => setForm({...form, machines_count: e.target.value})} />
+                  </div>
+                  <div className="flex justify-between items-center bg-slate-50 p-3 rounded-xl">
+                     <span className="text-sm font-black text-slate-400 uppercase">Workers:</span>
+                     <input type="number" className="w-12 bg-transparent text-right font-black" value={form.workers_needed} onChange={e => setForm({...form, workers_needed: e.target.value})} />
+                  </div>
+               </div>
+
+               <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 flex flex-col gap-4">
+                  <h4 className="text-sm font-black text-slate-400 uppercase tracking-widest">Vehicle</h4>
+                  <select className="premium-input" value={form.transport_needed} onChange={e => setForm({...form, transport_needed: e.target.value})}>
+                     <option value="Pickup Truck">Pickup Truck</option>
+                     <option value="Small Van">Small Van</option>
+                     <option value="Box Truck">Box Truck (Large)</option>
+                  </select>
+               </div>
+            </div>
+
+            <button type="submit" className="w-full py-5 bg-[#0f172a] text-white rounded-[2rem] text-sm font-black uppercase tracking-[0.2em] shadow-2xl shadow-indigo-900/20 hover:scale-[1.01] transition-transform">
+               {editingEvent ? 'Update Strategic Plan' : 'Commit & Sync System'}
+            </button>
+          </form>
+        </div>
+      )}
+
+      {!showForm && (
+        <div className="grid grid-cols-1 gap-4">
+           {filteredEvents.map(ev => {
+              const resolved = resolveStatus(ev);
+              const isManual = ev.manual_status && ev.manual_status !== 'auto';
+              let parsedNotes = {};
+              try { parsedNotes = JSON.parse(ev.notes); } catch(e){}
+
+              return (
+                <div key={ev.id} className="premium-card p-6 border-slate-200 group hover:border-indigo-200 transition-all">
+                   <div className="flex flex-col md:flex-row justify-between gap-6">
+                      <div className="flex-1 space-y-4">
+                         <div className="flex items-center gap-3">
+                            <div className={`p-3 rounded-2xl ${resolved === 'today' ? 'bg-orange-100 text-orange-600' : 'bg-slate-100 text-slate-600'}`}>
+                               <CalendarPlus className="w-6 h-6" />
+                            </div>
+                            <div>
+                               <h3 className="text-xl font-black text-slate-900 uppercase tracking-tighter leading-none">{ev.event_name}</h3>
+                               <p className="text-sm font-bold text-slate-400 uppercase tracking-widest mt-1.5 flex items-center gap-1.5">
+                                  <MapPin className="w-3 h-3"/> {ev.location} • <Phone className="w-3 h-3"/> {ev.phone || 'No Phone'}
+                               </p>
+                            </div>
+                            <div className="ml-4 flex items-center gap-2">
+                               <StatusBadge status={resolved} />
+                               {isManual && <span className="text-[10px] font-black text-slate-300 border border-slate-100 px-1.5 py-0.5 rounded-full uppercase">Manual</span>}
+                            </div>
+                         </div>
+
+                         <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 pt-2">
+                            <div className="bg-slate-50 p-3 rounded-2xl">
+                               <p className="text-sm font-black text-slate-400 uppercase mb-1">Partner Info</p>
+                               <p className="text-sm font-bold text-slate-700 truncate">{ev.client_name}</p>
+                            </div>
+                            <div className="bg-indigo-50/50 p-3 rounded-2xl">
+                               <p className="text-sm font-black text-indigo-400 uppercase mb-1">Agreement</p>
+                               <p className="text-sm font-black text-indigo-700 uppercase">
+                                  {ev.deal_type === 'Fixing Rent' ? `Fixed: $${ev.rent_amount}` : `Split: ${ev.company_percent}/${ev.partner_percent}`}
+                               </p>
+                            </div>
+                            <div className="bg-slate-50 p-3 rounded-2xl">
+                               <p className="text-sm font-black text-slate-400 uppercase mb-1">Schedule</p>
+                               <p className="text-sm font-bold text-slate-700">{ev.date} ({parsedNotes.days || 1}d)</p>
+                            </div>
+                            <div className="bg-slate-50 p-3 rounded-2xl">
+                               <p className="text-sm font-black text-slate-400 uppercase mb-1">GenKey</p>
+                               <p className="text-sm font-black font-mono text-slate-500 uppercase">{ev.gen_key}</p>
+                            </div>
+                         </div>
+                      </div>
+
+                      {/* --- Action Panel --- */}
+                      <div className="flex md:flex-col justify-end gap-2 border-t md:border-t-0 md:border-l border-slate-100 pt-4 md:pt-0 md:pl-6 min-w-[120px]">
+                         <div className="flex gap-2">
+                            <button onClick={() => handleEdit(ev)} className="flex-1 md:flex-none p-3 bg-blue-50 text-blue-600 rounded-2xl hover:bg-blue-100 transition flex items-center justify-center"><Edit className="w-4 h-4"/></button>
+                            <button onClick={() => handleDelete(ev.id)} className="flex-1 md:flex-none p-3 bg-red-50 text-red-600 rounded-2xl hover:bg-red-100 transition flex items-center justify-center"><Trash2 className="w-4 h-4"/></button>
+                         </div>
+                         <div className="w-px md:w-full h-auto md:h-px bg-slate-50 my-2"></div>
+                         <StatusDropdown current={resolved} onSelect={(s) => handleStatusChange(ev, s)} />
+                         <button 
+                            onClick={() => handleGoLive(ev)} 
+                            className="flex items-center gap-1.5 px-3 py-2 bg-green-50 text-green-700 font-black text-sm uppercase tracking-widest rounded-xl hover:bg-green-100 transition border border-green-200 mt-2"
+                         >
+                            <CheckCircle className="w-3.5 h-3.5"/> Go Live
+                         </button>
+                      </div>
+                   </div>
+                </div>
+              );
+           })}
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default UpcomingEvents;
+

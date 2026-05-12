@@ -1,0 +1,15 @@
+{
+  "name": "nlg-arcade-hub",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start:backend": "cd backend && npm start",
+    "start:admin": "cd admin && npm start",
+    "start:frontend": "cd frontend && npm start",
+    "dev": "npx concurrently \"npm run start:backend\" \"npm run start:admin\" \"npm run start:frontend\"",
+    "install:all": "cd backend && npm install && cd ../admin && npm install && cd ../frontend && npm install"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
