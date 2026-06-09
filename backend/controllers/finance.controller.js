@@ -51,7 +51,8 @@ exports.addExpense = (req, res) => {
         ? `Company paid ${description} directly` 
         : `${payerName} paid $${amount} for ${description} and this amount became a company debt`;
 
-      logAction(admin_name, 'Finance', 'Input Expense', h3Text, mainText, amount, event_name || 'General');
+      const finalAdminName = req.adminName || admin_name || 'System';
+      logAction(finalAdminName, 'Finance', 'Input Expense', h3Text, mainText, amount, event_name || 'General');
 
       return result.lastInsertRowid;
     });
@@ -83,22 +84,69 @@ exports.getExpenses = (req, res) => {
  * Updates specific fields of an existing expense record.
  */
 exports.updateExpense = (req, res) => {
-  const { amount, paid_by, category, description, day_type, event_id, event_name, date } = req.body;
+  const { amount, paid_by, paid_by_name, category, description, day_type, event_id, event_name, date } = req.body;
   try {
-    db.prepare(`
-      UPDATE expenses SET 
-        amount = COALESCE(?, amount),
-        paid_by = COALESCE(?, paid_by),
-        category = COALESCE(?, category),
-        description = COALESCE(?, description),
-        day_type = COALESCE(?, day_type),
-        event_id = COALESCE(?, event_id),
-        event_name = COALESCE(?, event_name),
-        date = COALESCE(?, date)
-      WHERE id = ?
-    `).run(amount, paid_by, category, description, day_type, event_id, event_name, date, req.params.id);
+    const original = db.prepare("SELECT * FROM expenses WHERE id = ?").get(req.params.id);
+    if (!original) {
+      return res.status(404).json({ error: 'Expense not found' });
+    }
 
-    logAction(req.body.admin_name, 'Finance', 'Expense Updated', `Record Updated — $${amount || 0}`, `Expense details updated for: ${description || 'Unknown'}`, amount || 0, event_name || 'General');
+    const updateTx = db.transaction(() => {
+      // 1. Update the expense record
+      db.prepare(`
+        UPDATE expenses SET 
+          amount = COALESCE(?, amount),
+          paid_by = COALESCE(?, paid_by),
+          paid_by_name = COALESCE(?, paid_by_name),
+          category = COALESCE(?, category),
+          description = COALESCE(?, description),
+          day_type = COALESCE(?, day_type),
+          event_id = COALESCE(?, event_id),
+          event_name = COALESCE(?, event_name),
+          date = COALESCE(?, date)
+        WHERE id = ?
+      `).run(amount, paid_by, paid_by_name, category, description, day_type, event_id, event_name, date, req.params.id);
+
+      const newAmount = amount !== undefined ? amount : original.amount;
+      const newPaidBy = paid_by !== undefined ? paid_by : original.paid_by;
+      const newPaidByName = paid_by_name !== undefined ? paid_by_name : original.paid_by_name;
+      const newEventId = event_id !== undefined ? event_id : original.event_id;
+
+      // 2. Automated Debt Tracking sync
+      const existingDebt = db.prepare("SELECT * FROM debts WHERE related_expense_id = ?").get(req.params.id);
+      const isPartnerPayer = (newPaidBy === 'moemen' || newPaidBy === 'abd' || newPaidBy === 'others');
+
+      if (existingDebt) {
+        if (newPaidBy === 'company') {
+          // If paid by company now, delete the debt record
+          db.prepare("DELETE FROM debts WHERE id = ?").run(existingDebt.id);
+        } else {
+          // Update the existing debt record
+          db.prepare(`
+            UPDATE debts SET 
+              partner_name = ?, 
+              partner_real_name = ?, 
+              amount = ?, 
+              related_event_id = ? 
+            WHERE id = ?
+          `).run(newPaidBy, newPaidByName || null, newAmount, newEventId || null, existingDebt.id);
+        }
+      } else if (isPartnerPayer) {
+        // Create a new debt record if it wasn't a partner expense before
+        db.prepare(`
+          INSERT INTO debts (partner_name, partner_real_name, amount, type, related_expense_id, related_event_id) 
+          VALUES (?, ?, ?, 'debt_to_partner', ?, ?)
+        `).run(newPaidBy, newPaidByName || null, newAmount, req.params.id, newEventId || null);
+      }
+    });
+
+    updateTx();
+
+    const finalAmount = amount !== undefined ? amount : original.amount;
+    const finalDescription = description !== undefined ? description : original.description;
+    const finalEventName = event_name !== undefined ? event_name : original.event_name;
+    const adminName = req.adminName || req.body.admin_name || 'Admin';
+    logAction(adminName, 'Finance', 'Expense Updated', `Record Updated — $${finalAmount || 0}`, `Expense details updated for: ${finalDescription || 'Unknown'}`, finalAmount || 0, finalEventName || 'General');
 
     res.json({ success: true });
   } catch (err) {
@@ -135,11 +183,12 @@ exports.markExpensePaid = (req, res) => {
         }
       }
 
-      // Auditing
+       // Auditing
       const payer = expense.paid_by === 'company' ? 'Company' : (expense.paid_by.charAt(0).toUpperCase() + expense.paid_by.slice(1));
       const h3Text = `Expense Paid — ${payer}`;
       const mainText = `Company paid back $${expense.amount} to ${payer} for ${expense.description} expense`;
-      logAction(admin_name, 'Finance', 'Expense Marked as Paid', h3Text, mainText, expense.amount, expense.event_name || 'General');
+      const finalAdminName = req.adminName || admin_name || 'System';
+      logAction(finalAdminName, 'Finance', 'Expense Marked as Paid', h3Text, mainText, expense.amount, expense.event_name || 'General');
     });
 
     markPaidTransaction();
@@ -232,7 +281,14 @@ exports.settleFromEvent = (req, res) => {
     if (!event) return res.status(404).json({ error: 'Event not found' });
 
     const settleTransaction = db.transaction(() => {
-      let remaining = event.total_income;
+      let eventIncome = event.total_income || 0;
+      if (eventIncome === 0) {
+        const incomeSum = db.prepare("SELECT SUM(amount) as total FROM income WHERE event_id = ?").get(event_id);
+        if (incomeSum && incomeSum.total > 0) {
+          eventIncome = incomeSum.total;
+        }
+      }
+      let remaining = eventIncome;
       const log = [];
 
       // 1. Debt Liquidation: Settle selected pending company debts
@@ -288,6 +344,11 @@ exports.settleFromEvent = (req, res) => {
     });
 
     const result = settleTransaction();
+    const adminName = req.adminName || req.body.admin_name || 'Admin';
+    if (result.log && result.log.length > 0) {
+      logAction(adminName, 'Finance', 'Settle Event', `Event Settled: ${event.event_name}`, `Settlement complete. Logs: ${result.log.join(', ')}`, event.total_income || 0, event.event_name);
+    }
+
     res.json({ success: true, ...result, message: 'Settlement completed' });
   } catch (err) {
     res.status(500).json({ error: 'Settlement failed', details: err.message });
@@ -347,7 +408,8 @@ exports.addSmartIncome = (req, res) => {
             
             const h3Text = `Debt Paid from Income`;
             const mainText = `$${amountToPay} paid to ${payerName} from ${finalEventName} income for ${reasonText} expense`;
-            logAction(req.body.admin_name, 'Finance', 'Debt Payment Completed', h3Text, mainText, amountToPay, finalEventName);
+            const adminName = req.adminName || req.body.admin_name || 'Admin';
+            logAction(adminName, 'Finance', 'Debt Payment Completed', h3Text, mainText, amountToPay, finalEventName);
 
             totalDebtsPaid += amountToPay;
             clearedNames.push(`${payerName}($${amountToPay})`);
@@ -365,7 +427,8 @@ exports.addSmartIncome = (req, res) => {
       ).run(finalEventId, amount, source, date, notes || '', amount, debtsClearedStr || 'None', final_profit);
 
       // 3. System Logging
-      logAction(req.body.admin_name, 'Finance', 'New Income Added', `${source} Income — $${amount}`, `Income received from ${source} for ${finalEventName}. ${clearedNames.length > 0 ? 'Debts paid to: ' + debtsClearedStr : ''}`, amount, finalEventName);
+      const adminName = req.adminName || req.body.admin_name || 'Admin';
+      logAction(adminName, 'Finance', 'New Income Added', `${source} Income — $${amount}`, `Income received from ${source} for ${finalEventName}. ${clearedNames.length > 0 ? 'Debts paid to: ' + debtsClearedStr : ''}`, amount, finalEventName);
 
       return { finalEventId, totalDebtsPaid, final_profit };
     });

@@ -11,6 +11,7 @@
 const express = require('express');
 const router = express.Router();
 const productController = require('../controllers/product.controller');
+const { adminProtect } = require('../middleware/admin.middleware');
 
 /**
  * ==========================================
@@ -24,20 +25,14 @@ router.get('/', productController.getProducts);
 // Fetch featured machines for homepage (max 9)
 router.get('/featured', productController.getFeaturedProducts);
 
-// Toggle featured status for a machine
-router.patch('/:id/featured', productController.toggleFeatured);
-
 // Fetch machine details
 router.get('/:id', productController.getProduct);
 
-// Register new machine
-router.post('/', productController.addProduct);
-
-// Update machine specifications
-router.put('/:id', productController.updateProduct);
-
-// Archive machine (Soft delete)
-router.delete('/:id', productController.deleteProduct);
+// Admin-only write/featured routes
+router.patch('/:id/featured', adminProtect, productController.toggleFeatured);
+router.post('/', adminProtect, productController.addProduct);
+router.put('/:id', adminProtect, productController.updateProduct);
+router.delete('/:id', adminProtect, productController.deleteProduct);
 
 module.exports = router;
 

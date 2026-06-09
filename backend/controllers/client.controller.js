@@ -78,7 +78,8 @@ exports.addClient = (req, res) => {
     const isPartner = (type || 'client') === 'event_manager';
     const section = isPartner ? 'Partners' : 'Clients';
     const actionType = isPartner ? 'New Partner Added' : 'New Client Added';
-    logAction(req.body.admin_name, section, actionType, `${name} added`, `${name} was registered as a ${isPartner ? 'Partner/Manager' : 'Client'}.`, 0, name);
+    const adminName = req.adminName || req.body.admin_name || 'Admin';
+    logAction(adminName, section, actionType, `${name} added`, `${name} was registered as a ${isPartner ? 'Partner/Manager' : 'Client'}.`, 0, name);
 
     res.status(201).json({ success: true, id });
   } catch (err) {
@@ -109,7 +110,8 @@ exports.updateClient = (req, res) => {
     const client = db.prepare("SELECT name, type FROM clients WHERE id = ?").get(req.params.id);
     const isPartner = (type || client.type) === 'event_manager';
     const section = isPartner ? 'Partners' : 'Clients';
-    logAction(req.body.admin_name, section, `${isPartner ? 'Partner' : 'Client'} Updated`, `${name || client.name} details changed`, `${isPartner ? 'Partner' : 'Client'} ${name || client.name} information was updated.`, 0, name || client.name);
+    const adminName = req.adminName || req.body.admin_name || 'Admin';
+    logAction(adminName, section, `${isPartner ? 'Partner' : 'Client'} Updated`, `${name || client.name} details changed`, `${isPartner ? 'Partner' : 'Client'} ${name || client.name} information was updated.`, 0, name || client.name);
 
     res.json({ success: true });
   } catch (err) {
@@ -125,12 +127,16 @@ exports.updateClient = (req, res) => {
 exports.deleteClient = (req, res) => {
   try {
     const client = db.prepare("SELECT name, type FROM clients WHERE id = ?").get(req.params.id);
+    if (!client) {
+      return res.status(404).json({ error: 'Client not found' });
+    }
     db.prepare("UPDATE clients SET status = 'archived' WHERE id = ?").run(req.params.id);
     
     // Auditing
     const isPartner = client.type === 'event_manager';
     const section = isPartner ? 'Partners' : 'Clients';
-    logAction(req.body.admin_name, section, `${isPartner ? 'Partner' : 'Client'} Archived`, `${client.name} archived`, `${isPartner ? 'Partner' : 'Client'} '${client.name}' was moved to archive.`, 0, client.name);
+    const adminName = req.adminName || req.body.admin_name || 'Admin';
+    logAction(adminName, section, `${isPartner ? 'Partner' : 'Client'} Archived`, `${client.name} archived`, `${isPartner ? 'Partner' : 'Client'} '${client.name}' was moved to archive.`, 0, client.name);
 
     res.json({ success: true, message: 'Client archived' });
   } catch (err) {

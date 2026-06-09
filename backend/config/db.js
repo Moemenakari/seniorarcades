@@ -301,7 +301,6 @@ addColSafe("ALTER TABLE products ADD COLUMN rent_price TEXT DEFAULT 'Average ren
 addColSafe("ALTER TABLE products ADD COLUMN image_url2 TEXT");
 addColSafe("ALTER TABLE products ADD COLUMN image_url3 TEXT");
 addColSafe('ALTER TABLE events ADD COLUMN linked_event_id INTEGER');
-addColSafe("ALTER TABLE game_ratings ADD COLUMN is_hidden INTEGER DEFAULT 0");
 
 // Finance System Enhancements
 addColSafe("ALTER TABLE income ADD COLUMN source TEXT DEFAULT 'Event'");

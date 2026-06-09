@@ -81,7 +81,7 @@ exports.getDashboard = (req, res) => {
       insights.push(`💸 There are ${debtsPerPerson.length} people with outstanding debts.`);
     }
 
-    const topExpenseCategory = categoryChart.sort((a,b) => b.value - a.value)[0];
+    const topExpenseCategory = [...categoryChart].sort((a,b) => b.value - a.value)[0];
     if (topExpenseCategory) {
       insights.push(`📊 Highest expense category is ${topExpenseCategory.category} ($${topExpenseCategory.value}).`);
     }
@@ -144,7 +144,8 @@ exports.chatAI = (req, res) => {
     // Status Query
     if (msg.includes('وضع') || msg.includes('status') || msg.includes('الشركة')) {
        const profit = db.prepare("SELECT (SELECT SUM(amount) FROM income) - (SELECT SUM(amount) FROM expenses WHERE status != 'archived') as profit").get();
-       reply = `الوضع المالي العام للشركة حالياً: ${profit.profit >= 0 ? 'جيد جداً ومربح' : 'يحتاج إلى مراجعة بسبب زيادة المصاريف'}. صافي الربح الكلي هو $${profit.profit || 0}.`;
+       const totalProfit = profit && profit.profit !== null ? profit.profit : 0;
+       reply = `الوضع المالي العام للشركة حالياً: ${totalProfit >= 0 ? 'جيد جداً ومربح' : 'يحتاج إلى مراجعة بسبب زيادة المصاريف'}. صافي الربح الكلي هو $${totalProfit}.`;
     
     // Debt Query
     } else if (msg.includes('دين') || msg.includes('debt') || msg.includes('ديون')) {
@@ -156,7 +157,11 @@ exports.chatAI = (req, res) => {
     // Expense Query
     } else if (msg.includes('مصاريف') || msg.includes('expense')) {
        const topExp = db.prepare("SELECT description, amount FROM expenses WHERE status != 'archived' ORDER BY amount DESC LIMIT 1").get();
-       reply = `أعلى مصروف تم تسجيله مؤخراً هو "${topExp.description}" بقيمة $${topExp.amount}.`;
+       if (topExp) {
+          reply = `أعلى مصروف تم تسجيله مؤخراً هو "${topExp.description}" بقيمة $${topExp.amount}.`;
+       } else {
+          reply = `لا توجد مصاريف مسجلة حالياً في النظام.`;
+       }
     
     // Profit Query
     } else if (msg.includes('أرباح') || msg.includes('profit')) {

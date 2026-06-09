@@ -65,19 +65,20 @@ const dashboardRoutes = require('./routes/dashboard.routes');
 const authRoutes = require('./routes/auth.routes');
 const ratingRoutes = require('./routes/rating.routes');
 const sponsorshipRoutes = require('./routes/sponsorship.routes');
+const { adminProtect } = require('./middleware/admin.middleware');
 
 /**
  * ==========================================
  * API ROUTE MOUNTING
  * ==========================================
  */
-app.use('/api/events', eventRoutes);
-app.use('/api/finances', financeRoutes);
+app.use('/api/events', adminProtect, eventRoutes);
+app.use('/api/finances', adminProtect, financeRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/games', productRoutes);       // Alias for backward compatibility
-app.use('/api/clients', clientRoutes);
-app.use('/api/archive', archiveRoutes);
-app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/clients', adminProtect, clientRoutes);
+app.use('/api/archive', adminProtect, archiveRoutes);
+app.use('/api/dashboard', adminProtect, dashboardRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/ratings', ratingRoutes);
 app.use('/api/sponsorship', sponsorshipRoutes);  // Sponsorship gallery management
@@ -92,7 +93,7 @@ app.get('/api/locations', (req, res) => {
   }
 });
 
-app.post('/api/locations', (req, res) => {
+app.post('/api/locations', adminProtect, (req, res) => {
   try {
     const { name, image_url } = req.body;
     const info = db.prepare('INSERT INTO locations (name, image_url) VALUES (?, ?)').run(name, image_url);
@@ -102,7 +103,7 @@ app.post('/api/locations', (req, res) => {
   }
 });
 
-app.put('/api/locations/:id', (req, res) => {
+app.put('/api/locations/:id', adminProtect, (req, res) => {
   try {
     const { name, image_url } = req.body;
     db.prepare('UPDATE locations SET name = ?, image_url = ? WHERE id = ?').run(name, image_url, req.params.id);
@@ -112,7 +113,7 @@ app.put('/api/locations/:id', (req, res) => {
   }
 });
 
-app.delete('/api/locations/:id', (req, res) => {
+app.delete('/api/locations/:id', adminProtect, (req, res) => {
   try {
     db.prepare('DELETE FROM locations WHERE id = ?').run(req.params.id);
     res.json({ success: true });
@@ -139,7 +140,7 @@ app.get('/api/settings', (req, res) => {
 });
 
 // Update application settings
-app.put('/api/settings', (req, res) => {
+app.put('/api/settings', adminProtect, (req, res) => {
   try {
     db.prepare("UPDATE settings SET setting_value = ? WHERE setting_key = 'ticker_text'").run(req.body.ticker_text);
     res.json({ success: true });
@@ -161,14 +162,14 @@ app.get('/api/health', (req, res) => res.json({
   timestamp: new Date().toISOString() 
 }));
 
-// 404 Fallback Handler
-app.use('*', (req, res) => res.status(404).json({ error: 'Route not found' }));
-
 // Global Exception Handler
 app.use((err, req, res, next) => {
   console.error('Server Error:', err.stack);
   res.status(500).json({ error: 'Internal Server Error' });
 });
+
+// 404 Fallback Handler
+app.use('*', (req, res) => res.status(404).json({ error: 'Route not found' }));
 
 /**
  * ==========================================

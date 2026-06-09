@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
+import axios from 'axios';
 import { 
   LayoutDashboard, 
   Gamepad2, 
@@ -41,6 +42,8 @@ function LoginScreen({ onLogin }) {
     e.preventDefault();
     if ((creds.user === 'moemen' || creds.user === 'abd') && creds.pass === 'admin123') {
        localStorage.setItem('nlg_admin', creds.user);
+       axios.defaults.headers.common['x-admin-master-key'] = 'admin123';
+       axios.defaults.headers.common['x-admin-name'] = creds.user;
        onLogin();
     } else {
        alert("Invalid credentials. Founders only.");
@@ -152,6 +155,13 @@ const Sidebar = ({ isOpen, toggle }) => {
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(localStorage.getItem('nlg_admin') != null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      axios.defaults.headers.common['x-admin-master-key'] = 'admin123';
+      axios.defaults.headers.common['x-admin-name'] = localStorage.getItem('nlg_admin') || 'Admin';
+    }
+  }, [isAuthenticated]);
 
   if (!isAuthenticated) return <LoginScreen onLogin={() => setIsAuthenticated(true)} />;
 

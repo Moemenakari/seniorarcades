@@ -13,6 +13,7 @@
 const express = require('express');
 const router = express.Router();
 const sponsorshipController = require('../controllers/sponsorship.controller');
+const { adminProtect } = require('../middleware/admin.middleware');
 
 /**
  * PUBLIC ROUTES
@@ -25,21 +26,18 @@ router.get('/gallery', sponsorshipController.getGallery);
 /**
  * ADMIN ROUTES
  * ------------
- * These routes modify gallery data and should only be called
- * from the Admin Panel. No auth middleware is applied here
- * since the Admin Panel handles authentication client-side
- * (consistent with the rest of the project's admin routes).
+ * These routes modify gallery data and require admin credentials.
  */
 // Add a new gallery image
-router.post('/gallery', sponsorshipController.addImage);
+router.post('/gallery', adminProtect, sponsorshipController.addImage);
 
 // Update an existing gallery image
-router.put('/gallery/:id', sponsorshipController.updateImage);
+router.put('/gallery/:id', adminProtect, sponsorshipController.updateImage);
 
 // Set a specific image as the main hero image
-router.put('/gallery/:id/main', sponsorshipController.setMainImage);
+router.put('/gallery/:id/main', adminProtect, sponsorshipController.setMainImage);
 
 // Delete a gallery image
-router.delete('/gallery/:id', sponsorshipController.deleteImage);
+router.delete('/gallery/:id', adminProtect, sponsorshipController.deleteImage);
 
 module.exports = router;

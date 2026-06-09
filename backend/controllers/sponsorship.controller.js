@@ -48,20 +48,23 @@ exports.addImage = (req, res) => {
   }
 
   try {
-    // If this is being set as main, clear the existing main flag first
-    if (is_main) {
-      db.prepare('UPDATE sponsorship_gallery SET is_main = 0').run();
-    }
+    const addTx = db.transaction(() => {
+      // If this is being set as main, clear the existing main flag first
+      if (is_main) {
+        db.prepare('UPDATE sponsorship_gallery SET is_main = 0').run();
+      }
 
-    const result = db.prepare(
-      'INSERT INTO sponsorship_gallery (image_url, description, sort_order, is_main) VALUES (?, ?, ?, ?)'
-    ).run(
-      image_url.trim(),
-      description || '',
-      sort_order !== undefined ? parseInt(sort_order) : 0,
-      is_main ? 1 : 0
-    );
+      return db.prepare(
+        'INSERT INTO sponsorship_gallery (image_url, description, sort_order, is_main) VALUES (?, ?, ?, ?)'
+      ).run(
+        image_url.trim(),
+        description || '',
+        sort_order !== undefined ? parseInt(sort_order) : 0,
+        is_main ? 1 : 0
+      );
+    });
 
+    const result = addTx();
     res.status(201).json({ success: true, id: result.lastInsertRowid });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -84,26 +87,29 @@ exports.updateImage = (req, res) => {
       return res.status(404).json({ error: 'Image not found' });
     }
 
-    // If setting this as main, clear existing main flag
-    if (is_main) {
-      db.prepare('UPDATE sponsorship_gallery SET is_main = 0').run();
-    }
+    const updateTx = db.transaction(() => {
+      // If setting this as main, clear existing main flag
+      if (is_main) {
+        db.prepare('UPDATE sponsorship_gallery SET is_main = 0').run();
+      }
 
-    db.prepare(`
-      UPDATE sponsorship_gallery SET
-        image_url   = COALESCE(?, image_url),
-        description = COALESCE(?, description),
-        sort_order  = COALESCE(?, sort_order),
-        is_main     = COALESCE(?, is_main)
-      WHERE id = ?
-    `).run(
-      image_url ? image_url.trim() : null,
-      description !== undefined ? description : null,
-      sort_order !== undefined ? parseInt(sort_order) : null,
-      is_main !== undefined ? (is_main ? 1 : 0) : null,
-      id
-    );
+      db.prepare(`
+        UPDATE sponsorship_gallery SET
+          image_url   = COALESCE(?, image_url),
+          description = COALESCE(?, description),
+          sort_order  = COALESCE(?, sort_order),
+          is_main     = COALESCE(?, is_main)
+        WHERE id = ?
+      `).run(
+        image_url ? image_url.trim() : null,
+        description !== undefined ? description : null,
+        sort_order !== undefined ? parseInt(sort_order) : null,
+        is_main !== undefined ? (is_main ? 1 : 0) : null,
+        id
+      );
+    });
 
+    updateTx();
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -142,10 +148,13 @@ exports.setMainImage = (req, res) => {
       return res.status(404).json({ error: 'Image not found' });
     }
 
-    // Clear all main flags, then set the selected one
-    db.prepare('UPDATE sponsorship_gallery SET is_main = 0').run();
-    db.prepare('UPDATE sponsorship_gallery SET is_main = 1 WHERE id = ?').run(req.params.id);
+    // Clear all main flags, then set the selected one in a transaction
+    const setMainTx = db.transaction(() => {
+      db.prepare('UPDATE sponsorship_gallery SET is_main = 0').run();
+      db.prepare('UPDATE sponsorship_gallery SET is_main = 1 WHERE id = ?').run(req.params.id);
+    });
 
+    setMainTx();
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: err.message });

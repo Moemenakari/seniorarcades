@@ -15,6 +15,12 @@ const jwt = require('jsonwebtoken');
 const JWT_SECRET = process.env.JWT_SECRET || 'nlg_arcade_secret_super_key';
 const JWT_EXPIRES_IN = '30d';
 
+if (process.env.NODE_ENV === 'production' && !process.env.JWT_SECRET) {
+  console.warn('⚠️ WARNING: JWT_SECRET environment variable is not set in production! Fallback key is unsafe.');
+}
+
+const otpStorage = new Map(); // phone -> { code, expires, verified }
+
 /**
  * ISSUE JWT SESSION
  * -----------------
@@ -22,7 +28,10 @@ const JWT_EXPIRES_IN = '30d';
  */
 const issueSession = (res, user) => {
   const token = jwt.sign({ id: user.id, role: user.role || 'user' }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
-  res.setHeader('Set-Cookie', `nlg_token=${token}; Max-Age=${30 * 24 * 60 * 60}; Path=/; HttpOnly; SameSite=Lax`);
+  const cookieOptions = process.env.NODE_ENV === 'production' 
+    ? 'SameSite=None; Secure' 
+    : 'SameSite=Lax';
+  res.setHeader('Set-Cookie', `nlg_token=${token}; Max-Age=${30 * 24 * 60 * 60}; Path=/; HttpOnly; ${cookieOptions}`);
   return token;
 };
 
@@ -124,13 +133,20 @@ exports.forgotPassword = async (req, res) => {
       return res.status(404).json({ error: 'No account found for this phone number.' });
     }
 
-    // If new_password is provided, reset to it
+    // If new_password is provided, reset to it AFTER verifying OTP
     if (new_password) {
+      const stored = otpStorage.get(phone.trim());
+      if (!stored || !stored.verified) {
+        return res.status(400).json({ error: 'Phone number verification is required before resetting password.' });
+      }
+
       if (String(new_password).length < 4) {
         return res.status(400).json({ error: 'Password must be at least 4 characters' });
       }
       const hash = await bcrypt.hash(new_password, 10);
       db.prepare('UPDATE users SET password_hash = ? WHERE id = ?').run(hash, user.id);
+      
+      otpStorage.delete(phone.trim());
       return res.json({ 
         success: true, 
         message: 'Password has been reset successfully. You can now login with your new password.',
@@ -138,13 +154,67 @@ exports.forgotPassword = async (req, res) => {
       });
     }
 
-    // If no new password, just confirm the account exists
+    // First step: Generate a 4-digit code and save to in-memory otpStorage
+    const code = Math.floor(1000 + Math.random() * 9000).toString();
+    otpStorage.set(phone.trim(), {
+      code,
+      expires: Date.now() + 5 * 60 * 1000,
+      verified: false
+    });
+
+    console.log(`\n============================\n[SMS MOCK] Verification code for ${phone.trim()} is: ${code}\n============================\n`);
+
+    // Return confirmation
     return res.json({ 
       success: true, 
-      message: 'Account found. Please provide a new password.',
+      message: 'Verification code sent (check server logs). Please verify before resetting.',
       user_name: user.name,
       user_phone: user.phone
     });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+/**
+ * VERIFY OTP
+ * ----------
+ * Validates the in-memory verification code.
+ */
+exports.verifyOtp = (req, res) => {
+  const { phone, otp } = req.body;
+  if (!phone || !otp) {
+    return res.status(400).json({ error: 'Phone number and verification code are required.' });
+  }
+
+  const stored = otpStorage.get(phone.trim());
+  if (!stored) {
+    return res.status(400).json({ error: 'No verification code was requested for this number.' });
+  }
+
+  if (Date.now() > stored.expires) {
+    otpStorage.delete(phone.trim());
+    return res.status(400).json({ error: 'Verification code has expired. Please request a new one.' });
+  }
+
+  if (stored.code !== otp.trim()) {
+    return res.status(400).json({ error: 'Incorrect verification code. Please try again.' });
+  }
+
+  // Mark as verified
+  otpStorage.set(phone.trim(), { ...stored, verified: true, expires: Date.now() + 5 * 60 * 1000 });
+  res.json({ success: true, message: 'Verification successful.' });
+};
+
+/**
+ * GET ALL USERS (Admin only)
+ * --------------------------
+ * Fetches all registered users in the database.
+ */
+exports.getUsers = (req, res) => {
+  try {
+    const users = db.prepare('SELECT id, name, email, phone, role, created_at FROM users ORDER BY created_at DESC').all();
+    res.json({ success: true, users });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

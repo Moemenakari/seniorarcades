@@ -101,11 +101,11 @@ exports.addProduct = (req, res) => {
   const { name, description, min_price, max_price, category, space_required, needs_electricity, electricity_amount, has_coins, extra_features, image_url, badge, image_url2, image_url3, status } = req.body;
   const parsedMin = parseFloat(min_price);
   const parsedMax = parseFloat(max_price);
-  if (!name || Number.isNaN(parsedMin) || Number.isNaN(parsedMax) || parsedMin < 0 || parsedMax < 0 || parsedMin >= parsedMax) {
-    return res.status(400).json({ error: 'Invalid pricing. Ensure min price is less than max price.' });
+  if (!name || Number.isNaN(parsedMin) || Number.isNaN(parsedMax) || parsedMin < 0 || parsedMax < 0 || parsedMin > parsedMax) {
+    return res.status(400).json({ error: 'Invalid pricing. Ensure min price is less than or equal to max price.' });
   }
   const average_price = (parsedMin + parsedMax) / 2;
-  const derivedRentPrice = `$${parsedMin} - $${parsedMax}`;
+  const derivedRentPrice = parsedMin === parsedMax ? `$${parsedMin}` : `$${parsedMin} - $${parsedMax}`;
 
   try {
     const result = db.prepare(
@@ -115,7 +115,8 @@ exports.addProduct = (req, res) => {
     const id = result.lastInsertRowid;
     
     // Auditing
-    logAction(req.body.admin_name, 'Machines', 'New Machine Added', `${name} added`, `New machine '${name}' was added to the system. Category: ${category || 'General'}`, 0, name);
+    const adminName = req.adminName || req.body.admin_name || 'Admin';
+    logAction(adminName, 'Machines', 'New Machine Added', `${name} added`, `New machine '${name}' was added to the system. Category: ${category || 'General'}`, 0, name);
 
     res.status(201).json({ success: true, id });
   } catch (err) {
@@ -134,12 +135,12 @@ exports.updateProduct = (req, res) => {
   if (hasBothPrices) {
     const parsedMin = parseFloat(min_price);
     const parsedMax = parseFloat(max_price);
-    if (Number.isNaN(parsedMin) || Number.isNaN(parsedMax) || parsedMin < 0 || parsedMax < 0 || parsedMin >= parsedMax) {
-      return res.status(400).json({ error: 'Invalid pricing. Ensure min price is less than max price.' });
+    if (Number.isNaN(parsedMin) || Number.isNaN(parsedMax) || parsedMin < 0 || parsedMax < 0 || parsedMin > parsedMax) {
+      return res.status(400).json({ error: 'Invalid pricing. Ensure min price is less than or equal to max price.' });
     }
   }
   const average_price = hasBothPrices ? ((parseFloat(min_price) + parseFloat(max_price)) / 2) : undefined;
-  const rent_price = hasBothPrices ? `$${parseFloat(min_price)} - $${parseFloat(max_price)}` : undefined;
+  const rent_price = hasBothPrices ? (parseFloat(min_price) === parseFloat(max_price) ? `$${parseFloat(min_price)}` : `$${parseFloat(min_price)} - $${parseFloat(max_price)}`) : undefined;
 
   try {
     db.prepare(`
@@ -165,7 +166,8 @@ exports.updateProduct = (req, res) => {
     `).run(name, description, min_price, max_price, average_price, category, space_required, needs_electricity !== undefined ? (needs_electricity ? 1 : 0) : undefined, electricity_amount, has_coins !== undefined ? (has_coins ? 1 : 0) : undefined, extra_features, image_url, badge, rent_price, image_url2, image_url3, status, req.params.id);
 
     // Auditing
-    logAction(req.body.admin_name, 'Machines', 'Machine Updated', `${name || 'Machine'} details changed`, `Machine ${name || 'ID: ' + req.params.id} was updated. Status: ${status || 'active'}`, 0, name || 'General');
+    const adminName = req.adminName || req.body.admin_name || 'Admin';
+    logAction(adminName, 'Machines', 'Machine Updated', `${name || 'Machine'} details changed`, `Machine ${name || 'ID: ' + req.params.id} was updated. Status: ${status || 'active'}`, 0, name || 'General');
 
     res.json({ success: true });
   } catch (err) {
@@ -197,7 +199,8 @@ exports.deleteProduct = (req, res) => {
     archiveTransaction();
 
     // Auditing
-    logAction(req.body.admin_name, 'Machines', 'Machine Archived', `${product.name} archived`, `Machine '${product.name}' was moved to system archive`, 0, product.name);
+    const adminName = req.adminName || req.body.admin_name || 'Admin';
+    logAction(adminName, 'Machines', 'Machine Archived', `${product.name} archived`, `Machine '${product.name}' was moved to system archive`, 0, product.name);
 
     res.json({ success: true, message: 'Product moved to system archive' });
   } catch (err) {

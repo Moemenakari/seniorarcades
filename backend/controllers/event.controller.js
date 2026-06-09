@@ -29,7 +29,7 @@ const syncEventFinance = (eventId, eventData) => {
   }
   
   // 1. Clear old auto-generated finances for this event to avoid duplication
-  db.prepare("DELETE FROM income WHERE event_id = ?").run(eventId);
+  db.prepare("DELETE FROM income WHERE event_id = ? AND source = 'Event Profit'").run(eventId);
   db.prepare("DELETE FROM expenses WHERE event_id = ? AND category = 'event_auto'").run(eventId);
 
   // 2. Insert Income (Gross Revenue)
@@ -173,7 +173,8 @@ exports.addEvent = (req, res) => {
     const actionType = isUpcoming ? 'New Upcoming Event Created' : 'New Event Created';
     const dealInfo = deal_type === 'Fixing Rent' ? `Rent: $${rent_amount}` : `Split: ${company_percent}/${partner_percent}`;
     
-    logAction(admin_name || 'System', section, actionType, `${event_name} — ${dealInfo}`, `${event_name} added for partner ${client_name || 'X'} on ${date || 'N/A'}. Deal: ${deal_type}`, profit || 0, event_name);
+    const finalAdminName = req.adminName || admin_name || 'System';
+    logAction(finalAdminName, section, actionType, `${event_name} — ${dealInfo}`, `${event_name} added for partner ${client_name || 'X'} on ${date || 'N/A'}. Deal: ${deal_type}`, profit || 0, event_name);
 
     if (status === 'completed') {
       syncEventFinance(id, req.body);
@@ -201,7 +202,8 @@ exports.updateStatus = (req, res) => {
     // Log Activity
     const isUpcoming = req.body.status === 'pending';
     const section = isUpcoming ? 'Upcoming Events' : 'Events';
-    logAction(req.body.admin_name || 'System', section, 'Status Updated', `${event.event_name} status: ${req.body.status}`, `${event.event_name} status changed from ${event.status} to ${req.body.status}`, 0, event.event_name);
+    const finalAdminName = req.adminName || req.body.admin_name || 'System';
+    logAction(finalAdminName, section, 'Status Updated', `${event.event_name} status: ${req.body.status}`, `${event.event_name} status changed from ${event.status} to ${req.body.status}`, 0, event.event_name);
 
     // Sync finances if marked as completed
     if (req.body.status === 'completed' && event.status !== 'completed') {
@@ -256,7 +258,8 @@ exports.updateEvent = (req, res) => {
       // Logging
       const isUpcoming = (req.body.status || eventBefore.status) === 'pending';
       const section = isUpcoming ? 'Upcoming Events' : 'Events';
-      logAction(req.body.admin_name, section, 'Event Updated', `${eventBefore.event_name} details changed`, `Event details updated for ${eventBefore.event_name}.`, 0, eventBefore.event_name);
+      const finalAdminName = req.adminName || req.body.admin_name || 'System';
+      logAction(finalAdminName, section, 'Event Updated', `${eventBefore.event_name} details changed`, `Event details updated for ${eventBefore.event_name}.`, 0, eventBefore.event_name);
       
       // Sync finances if marked as completed
       if ((req.body.status || eventBefore.status) === 'completed') {
@@ -288,7 +291,8 @@ exports.archiveEvent = (req, res) => {
     });
     archiveTransaction();
 
-    logAction(req.body.admin_name, 'Events', 'Event Archived', `${event.event_name} archived`, `${event.event_name} was moved to system archive`, 0, event.event_name);
+    const finalAdminName = req.adminName || req.body.admin_name || 'System';
+    logAction(finalAdminName, 'Events', 'Event Archived', `${event.event_name} archived`, `${event.event_name} was moved to system archive`, 0, event.event_name);
 
     res.json({ success: true, message: 'Event archived' });
   } catch (err) {
