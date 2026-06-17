@@ -1,39 +1,21 @@
-/**
- * ============================================================
- * CLIENT & PARTNER CONTROLLER
- * ============================================================
- * Final Graduation Project Refactor
- * Purpose: Manages the CRM aspect of the application, including 
- * customer directory and partner (Event Manager) relations.
- * ============================================================
- */
-
 const db = require('../config/db');
 const { logAction } = require('../utils/logger');
 
-/**
- * GET ALL CLIENTS
- * ---------------
- * Fetches active clients or partners based on the query type.
- * If fetching partners, it automatically attaches their event history.
- */
-exports.getClients = (req, res) => {
+exports.getClients = async (req, res) => {
   try {
-    const type = req.query.type; // Expected: 'client' or 'event_manager'
+    const type = req.query.type;
     let clients;
-    
     if (type) {
-      clients = db.prepare("SELECT * FROM clients WHERE status = 'active' AND type = ? ORDER BY created_at DESC").all(type);
+      clients = await db.prepare("SELECT * FROM clients WHERE status = 'active' AND type = ? ORDER BY created_at DESC").all(type);
     } else {
-      clients = db.prepare("SELECT * FROM clients WHERE status = 'active' ORDER BY created_at DESC").all();
+      clients = await db.prepare("SELECT * FROM clients WHERE status = 'active' ORDER BY created_at DESC").all();
     }
 
-    // Contextual Data Attachment: Partners (event_managers) need their event history
     if (type === 'event_manager') {
-       clients = clients.map(c => {
-          const events = db.prepare("SELECT * FROM events WHERE client_id = ? ORDER BY date DESC").all(c.id);
-          return { ...c, events };
-       });
+      clients = await Promise.all(clients.map(async c => {
+        const events = await db.prepare("SELECT * FROM events WHERE client_id = ? ORDER BY date DESC").all(c.id);
+        return { ...c, events };
+      }));
     }
 
     res.json(clients);
@@ -42,76 +24,51 @@ exports.getClients = (req, res) => {
   }
 };
 
-/**
- * GET SINGLE CLIENT
- * -----------------
- * Retrieves detailed profile for a client/partner and their linked events.
- */
-exports.getClient = (req, res) => {
+exports.getClient = async (req, res) => {
   try {
-    const client = db.prepare("SELECT * FROM clients WHERE id = ?").get(req.params.id);
+    const client = await db.prepare("SELECT * FROM clients WHERE id = ?").get(req.params.id);
     if (!client) return res.status(404).json({ error: 'Client not found' });
-
-    // Link related event data
-    const events = db.prepare("SELECT * FROM events WHERE client_id = ? ORDER BY date DESC").all(req.params.id);
+    const events = await db.prepare("SELECT * FROM events WHERE client_id = ? ORDER BY date DESC").all(req.params.id);
     res.json({ ...client, events });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
 
-/**
- * ADD NEW CLIENT
- * --------------
- * Registers a new customer or partner manager in the system.
- */
-exports.addClient = (req, res) => {
+exports.addClient = async (req, res) => {
   const { name, phone, location, event_type, type, notes } = req.body;
   try {
-    const result = db.prepare(
+    const result = await db.prepare(
       "INSERT INTO clients (name, phone, location, event_type, type, notes) VALUES (?, ?, ?, ?, ?, ?)"
     ).run(name, phone || '', location || '', event_type || '', type || 'client', notes || '');
 
-    const id = result.lastInsertRowid;
-    
-    // Auditing logic
     const isPartner = (type || 'client') === 'event_manager';
     const section = isPartner ? 'Partners' : 'Clients';
-    const actionType = isPartner ? 'New Partner Added' : 'New Client Added';
     const adminName = req.adminName || req.body.admin_name || 'Admin';
-    logAction(adminName, section, actionType, `${name} added`, `${name} was registered as a ${isPartner ? 'Partner/Manager' : 'Client'}.`, 0, name);
+    logAction(adminName, section, isPartner ? 'New Partner Added' : 'New Client Added', `${name} added`, `${name} registered as ${isPartner ? 'Partner/Manager' : 'Client'}.`, 0, name);
 
-    res.status(201).json({ success: true, id });
+    res.status(201).json({ success: true, id: result.lastInsertRowid });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
 
-/**
- * UPDATE CLIENT
- * -------------
- * Updates contact information or notes for a client/partner.
- */
-exports.updateClient = (req, res) => {
+exports.updateClient = async (req, res) => {
   const { name, phone, location, event_type, type, notes } = req.body;
   try {
-    db.prepare(`
-      UPDATE clients SET 
-        name = COALESCE(?, name),
-        phone = COALESCE(?, phone),
-        location = COALESCE(?, location),
-        event_type = COALESCE(?, event_type),
-        type = COALESCE(?, type),
-        notes = COALESCE(?, notes)
+    await db.prepare(`
+      UPDATE clients SET
+        name = COALESCE(?, name), phone = COALESCE(?, phone),
+        location = COALESCE(?, location), event_type = COALESCE(?, event_type),
+        type = COALESCE(?, type), notes = COALESCE(?, notes)
       WHERE id = ?
     `).run(name, phone, location, event_type, type, notes, req.params.id);
 
-    // Auditing
-    const client = db.prepare("SELECT name, type FROM clients WHERE id = ?").get(req.params.id);
+    const client = await db.prepare("SELECT name, type FROM clients WHERE id = ?").get(req.params.id);
     const isPartner = (type || client.type) === 'event_manager';
     const section = isPartner ? 'Partners' : 'Clients';
     const adminName = req.adminName || req.body.admin_name || 'Admin';
-    logAction(adminName, section, `${isPartner ? 'Partner' : 'Client'} Updated`, `${name || client.name} details changed`, `${isPartner ? 'Partner' : 'Client'} ${name || client.name} information was updated.`, 0, name || client.name);
+    logAction(adminName, section, `${isPartner ? 'Partner' : 'Client'} Updated`, `${name || client.name} details changed`, `${isPartner ? 'Partner' : 'Client'} ${name || client.name} updated.`, 0, name || client.name);
 
     res.json({ success: true });
   } catch (err) {
@@ -119,28 +76,20 @@ exports.updateClient = (req, res) => {
   }
 };
 
-/**
- * ARCHIVE CLIENT
- * --------------
- * Soft-deletes a client record to maintain relational integrity in old events.
- */
-exports.deleteClient = (req, res) => {
+exports.deleteClient = async (req, res) => {
   try {
-    const client = db.prepare("SELECT name, type FROM clients WHERE id = ?").get(req.params.id);
-    if (!client) {
-      return res.status(404).json({ error: 'Client not found' });
-    }
-    db.prepare("UPDATE clients SET status = 'archived' WHERE id = ?").run(req.params.id);
-    
-    // Auditing
+    const client = await db.prepare("SELECT name, type FROM clients WHERE id = ?").get(req.params.id);
+    if (!client) return res.status(404).json({ error: 'Client not found' });
+
+    await db.prepare("UPDATE clients SET status = 'archived' WHERE id = ?").run(req.params.id);
+
     const isPartner = client.type === 'event_manager';
     const section = isPartner ? 'Partners' : 'Clients';
     const adminName = req.adminName || req.body.admin_name || 'Admin';
-    logAction(adminName, section, `${isPartner ? 'Partner' : 'Client'} Archived`, `${client.name} archived`, `${isPartner ? 'Partner' : 'Client'} '${client.name}' was moved to archive.`, 0, client.name);
+    logAction(adminName, section, `${isPartner ? 'Partner' : 'Client'} Archived`, `${client.name} archived`, `'${client.name}' moved to archive.`, 0, client.name);
 
     res.json({ success: true, message: 'Client archived' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
-
