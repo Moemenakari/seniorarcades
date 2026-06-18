@@ -87,7 +87,7 @@ export function Hero() {
               className="text-[28px] sm:text-4xl lg:text-5xl xl:text-6xl leading-[1.15] text-white pt-8 sm:pt-4"
               style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800 }}
             >
-              Rent or Buy Arcade Games,
+              Rent or Sell Arcade Games,
               <span className="block mt-1 text-[#E53935]">
                 Inflatables & More
               </span>
