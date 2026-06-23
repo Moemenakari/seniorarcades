@@ -13,7 +13,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import {
   Plus, Search, CalendarPlus, MapPin, Edit, Trash2, X, Users,
   CheckCircle, Truck, Wrench, BrainCircuit, Link2, ChevronDown,
-  Clock, Zap, AlertCircle, Ban, Circle, Phone, Percent, Wallet, Scale, HandCoins
+  Clock, Zap, AlertCircle, Ban, Circle, Phone, Percent, Wallet, Scale, Coins
 } from 'lucide-react';
 import axios from 'axios';
 import { API_BASE_URL as API } from '../../config';
@@ -341,7 +341,7 @@ const UpcomingEvents = () => {
                            {[
                              { id: 'Fixing Rent',   label: 'Fixed Rent',    icon: Wallet,     desc: 'We pay space rent' },
                              { id: 'Revenue Split', label: 'Split %',       icon: Percent,    desc: 'Shared percentage' },
-                             { id: 'Partner Rent',  label: 'Partner Pays',  icon: HandCoins,  desc: 'Partner covers space' },
+                             { id: 'Partner Rent',  label: 'Partner Pays',  icon: Coins,  desc: 'Partner covers space' },
                            ].map(({ id, label, icon: Icon, desc }) => (
                              <button
                                key={id}
