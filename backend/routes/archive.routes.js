@@ -30,5 +30,8 @@ router.get('/financials', archiveController.getArchivedFinancials);
 // Update an audit log entry
 router.put('/:id', archiveController.updateAuditLog);
 
+// Soft-hide an audit log entry (preserves data, removes from view)
+router.patch('/:id/hide', archiveController.hideAuditLog);
+
 module.exports = router;
 

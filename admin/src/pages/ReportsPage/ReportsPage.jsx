@@ -36,6 +36,10 @@ const Reports = () => {
   const [editingLog, setEditingLog] = useState(null);
   const [editForm, setEditForm] = useState({ description: '', action_type: '', user: '', section: '' });
 
+  // ── HIDE (SOFT DELETE) STATE ──
+  const [hideConfirmId, setHideConfirmId] = useState(null);
+  const [isHiding, setIsHiding] = useState(false);
+
   // ── EXTRA FILTERS ──
   const [filterUser, setFilterUser] = useState('all');
   const [filterDate, setFilterDate] = useState('');
@@ -78,6 +82,20 @@ const Reports = () => {
       user: log.user,
       section: log.section
     });
+  };
+
+  const handleHideLog = async () => {
+    if (!hideConfirmId) return;
+    setIsHiding(true);
+    try {
+      await axios.patch(`${API}/archive/${hideConfirmId}/hide`);
+      setHideConfirmId(null);
+      fetchArchive();
+    } catch (err) {
+      alert('Failed to hide log entry');
+    } finally {
+      setIsHiding(false);
+    }
   };
 
   // ── UI HELPERS (Styles & Icons) ──
@@ -334,6 +352,13 @@ const Reports = () => {
                             >
                                <Edit className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                             </button>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); setHideConfirmId(log.id); }}
+                              className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-slate-100 text-slate-400 flex items-center justify-center hover:bg-red-100 hover:text-red-500 transition-all shadow-sm"
+                              title="Hide this log entry"
+                            >
+                               <X className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                            </button>
                             <button className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center transition-all ${isExpanded ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-400'}`}>
                                {isExpanded ? <ChevronUp className="w-4 h-4 sm:w-5 sm:h-5" /> : <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5" />}
                             </button>
@@ -389,6 +414,43 @@ const Reports = () => {
           </div>
         )}
       </div>
+
+      {/* =============================
+          5. HIDE CONFIRM MODAL
+          ============================= */}
+      {hideConfirmId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden">
+            <div className="p-6 border-b border-slate-100 bg-amber-50/50 flex justify-between items-center">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-amber-100 text-amber-600 flex items-center justify-center rounded-xl">
+                  <X className="w-5 h-5" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-black text-slate-800 uppercase tracking-tight leading-none">Hide Log Entry</h2>
+                  <p className="text-sm font-bold text-slate-500 mt-0.5">ID #{hideConfirmId}</p>
+                </div>
+              </div>
+              <button onClick={() => setHideConfirmId(null)} className="p-2 bg-white rounded-xl shadow-sm"><X className="w-5 h-5" /></button>
+            </div>
+            <div className="p-6 space-y-5">
+              <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4">
+                <p className="text-sm font-bold text-amber-800">This log entry will be hidden from the reports view. The data is preserved in the database and not permanently deleted.</p>
+              </div>
+              <div className="flex gap-3">
+                <button onClick={() => setHideConfirmId(null)} className="flex-1 py-3 bg-slate-100 text-slate-700 font-black text-sm uppercase tracking-widest rounded-2xl hover:bg-slate-200 transition">Cancel</button>
+                <button
+                  onClick={handleHideLog}
+                  disabled={isHiding}
+                  className="flex-1 py-3 bg-amber-500 text-white font-black text-sm uppercase tracking-widest rounded-2xl hover:bg-amber-600 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {isHiding ? <><span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" /> Hiding...</> : 'Hide Entry'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

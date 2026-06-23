@@ -10,10 +10,10 @@
  */
 
 import React, { useState, useEffect, useRef } from 'react';
-import { 
-  Plus, Search, CalendarPlus, MapPin, Edit, Trash2, X, Users, 
-  CheckCircle, Truck, Wrench, BrainCircuit, Link2, ChevronDown, 
-  Clock, Zap, AlertCircle, Ban, Circle, Phone, Percent, Wallet, Scale 
+import {
+  Plus, Search, CalendarPlus, MapPin, Edit, Trash2, X, Users,
+  CheckCircle, Truck, Wrench, BrainCircuit, Link2, ChevronDown,
+  Clock, Zap, AlertCircle, Ban, Circle, Phone, Percent, Wallet, Scale, HandCoins
 } from 'lucide-react';
 import axios from 'axios';
 import { API_BASE_URL as API } from '../../config';
@@ -156,6 +156,8 @@ const UpcomingEvents = () => {
     let plan = [];
     if (f.deal_type === 'Revenue Split') {
       plan.push(`🧠 AI Strategy: Revenue split (${f.company_percent}/${f.partner_percent}) — prioritize games with high replay value.`);
+    } else if (f.deal_type === 'Partner Rent') {
+      plan.push(`🧠 AI Strategy: Partner covering space rent ($${f.rent_amount}). This amount is added income for us — maximize machine revenue on top.`);
     } else {
       plan.push(`🧠 AI Strategy: Fixed rent agreement of $${f.rent_amount}. Objective: Maximize profit after overheads.`);
     }
@@ -335,44 +337,52 @@ const UpcomingEvents = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                      <div className="space-y-1 md:col-span-2">
                         <label className="text-sm font-black text-slate-500 uppercase tracking-widest ml-1">Agreement Type</label>
-                        <div className="flex gap-2">
-                           {['Fixing Rent', 'Revenue Split'].map(type => (
+                        <div className="flex flex-col sm:flex-row gap-2">
+                           {[
+                             { id: 'Fixing Rent',   label: 'Fixed Rent',    icon: Wallet,     desc: 'We pay space rent' },
+                             { id: 'Revenue Split', label: 'Split %',       icon: Percent,    desc: 'Shared percentage' },
+                             { id: 'Partner Rent',  label: 'Partner Pays',  icon: HandCoins,  desc: 'Partner covers space' },
+                           ].map(({ id, label, icon: Icon, desc }) => (
                              <button
-                               key={type}
+                               key={id}
                                type="button"
-                               onClick={() => setForm({...form, deal_type: type})}
-                               className={`flex-1 py-3 px-4 rounded-xl text-sm font-black uppercase tracking-widest transition-all border ${
-                                 form.deal_type === type ? 'bg-[#0f172a] text-white border-[#0f172a] shadow-lg' : 'bg-slate-50 text-slate-400 border-slate-200'
+                               onClick={() => setForm({...form, deal_type: id})}
+                               className={`flex-1 py-3 px-3 rounded-xl text-sm font-black uppercase tracking-widest transition-all border ${
+                                 form.deal_type === id ? 'bg-[#0f172a] text-white border-[#0f172a] shadow-lg' : 'bg-slate-50 text-slate-400 border-slate-200 hover:border-slate-300'
                                }`}
                              >
-                               {type === 'Fixing Rent' ? (
-                                 <div className="flex items-center justify-center gap-2">
-                                   <Wallet className="w-4 h-4" /> Fixed Rent
-                                 </div>
-                               ) : (
-                                 <div className="flex items-center justify-center gap-2">
-                                   <Percent className="w-4 h-4" /> Split %
-                                 </div>
-                               )}
+                               <div className="flex flex-col items-center gap-1">
+                                 <div className="flex items-center gap-1.5"><Icon className="w-4 h-4" /> {label}</div>
+                                 <span className={`text-[9px] font-bold normal-case tracking-normal ${form.deal_type === id ? 'text-white/70' : 'text-slate-400'}`}>{desc}</span>
+                               </div>
                              </button>
                            ))}
                         </div>
                      </div>
 
-                     {form.deal_type === 'Fixing Rent' ? (
+                     {form.deal_type === 'Fixing Rent' && (
                         <div className="space-y-1 md:col-span-2">
-                           <label className="text-sm font-black text-slate-500 uppercase tracking-widest ml-1">Rent Amount ($)</label>
-                           <input type="number" required className="premium-input bg-blue-50/30 text-blue-700 font-black" value={form.rent_amount} onChange={e => setForm({...form, rent_amount: parseFloat(e.target.value)})} />
+                           <label className="text-sm font-black text-slate-500 uppercase tracking-widest ml-1">Rent Amount We Pay ($)</label>
+                           <input type="number" min="0" className="premium-input bg-red-50/40 text-red-700 font-black" value={form.rent_amount} onChange={e => setForm({...form, rent_amount: parseFloat(e.target.value)||0})} />
+                           <p className="text-xs text-red-400 font-bold ml-1">This is an expense — deducted from our profit.</p>
                         </div>
-                     ) : (
+                     )}
+                     {form.deal_type === 'Partner Rent' && (
+                        <div className="space-y-1 md:col-span-2">
+                           <label className="text-sm font-black text-slate-500 uppercase tracking-widest ml-1">Space Value Partner Covered ($)</label>
+                           <input type="number" min="0" className="premium-input bg-green-50/40 text-green-700 font-black" value={form.rent_amount} onChange={e => setForm({...form, rent_amount: parseFloat(e.target.value)||0})} />
+                           <p className="text-xs text-green-600 font-bold ml-1">This is added income for us — the partner paid the space.</p>
+                        </div>
+                     )}
+                     {form.deal_type === 'Revenue Split' && (
                         <>
                            <div className="space-y-1">
                               <label className="text-sm font-black text-slate-500 uppercase tracking-widest ml-1">Company Share %</label>
-                              <input type="number" required className="premium-input bg-green-50/30 text-green-700 font-black" value={form.company_percent} onChange={e => setForm({...form, company_percent: parseInt(e.target.value)})} />
+                              <input type="number" className="premium-input bg-green-50/30 text-green-700 font-black" value={form.company_percent} onChange={e => setForm({...form, company_percent: parseInt(e.target.value)||0})} />
                            </div>
                            <div className="space-y-1">
                               <label className="text-sm font-black text-slate-500 uppercase tracking-widest ml-1">Partner Share %</label>
-                              <input type="number" required className="premium-input bg-orange-50/30 text-orange-700 font-black" value={form.partner_percent} onChange={e => setForm({...form, partner_percent: parseInt(e.target.value)})} />
+                              <input type="number" className="premium-input bg-orange-50/30 text-orange-700 font-black" value={form.partner_percent} onChange={e => setForm({...form, partner_percent: parseInt(e.target.value)||0})} />
                            </div>
                         </>
                      )}
@@ -508,10 +518,12 @@ const UpcomingEvents = () => {
                                <p className="text-sm font-black text-slate-400 uppercase mb-1">Partner Info</p>
                                <p className="text-sm font-bold text-slate-700 truncate">{ev.client_name}</p>
                             </div>
-                            <div className="bg-indigo-50/50 p-3 rounded-2xl">
-                               <p className="text-sm font-black text-indigo-400 uppercase mb-1">Agreement</p>
-                               <p className="text-sm font-black text-indigo-700 uppercase">
-                                  {ev.deal_type === 'Fixing Rent' ? `Fixed: $${ev.rent_amount}` : `Split: ${ev.company_percent}/${ev.partner_percent}`}
+                            <div className={`p-3 rounded-2xl ${ev.deal_type === 'Partner Rent' ? 'bg-green-50/60' : 'bg-indigo-50/50'}`}>
+                               <p className={`text-sm font-black uppercase mb-1 ${ev.deal_type === 'Partner Rent' ? 'text-green-500' : 'text-indigo-400'}`}>Agreement</p>
+                               <p className={`text-sm font-black uppercase ${ev.deal_type === 'Partner Rent' ? 'text-green-700' : 'text-indigo-700'}`}>
+                                  {ev.deal_type === 'Fixing Rent' ? `Fixed: -$${ev.rent_amount}` :
+                                   ev.deal_type === 'Partner Rent' ? `Partner Pays: +$${ev.rent_amount}` :
+                                   `Split: ${ev.company_percent}/${ev.partner_percent}`}
                                </p>
                             </div>
                             <div className="bg-slate-50 p-3 rounded-2xl">

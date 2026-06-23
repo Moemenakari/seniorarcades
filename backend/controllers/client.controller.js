@@ -11,12 +11,16 @@ exports.getClients = async (req, res) => {
       clients = await db.prepare("SELECT * FROM clients WHERE status = 'active' ORDER BY created_at DESC").all();
     }
 
-    if (type === 'event_manager') {
-      clients = await Promise.all(clients.map(async c => {
-        const events = await db.prepare("SELECT * FROM events WHERE client_id = ? ORDER BY date DESC").all(c.id);
+    // Always include events for event_manager clients regardless of filter
+    clients = await Promise.all(clients.map(async c => {
+      if (c.type === 'event_manager') {
+        const events = await db.prepare(
+          "SELECT id, event_name, date, location, status, deal_type, rent_amount, company_percent, partner_percent, profit FROM events WHERE client_id = ? AND status != 'archived' ORDER BY date DESC"
+        ).all(c.id);
         return { ...c, events };
-      }));
-    }
+      }
+      return c;
+    }));
 
     res.json(clients);
   } catch (err) {

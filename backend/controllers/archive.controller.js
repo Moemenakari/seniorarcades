@@ -20,7 +20,7 @@ exports.getArchivedFinancials = async (req, res) => {
 
 exports.getSystemArchive = async (req, res) => {
   try {
-    const logs = await db.prepare("SELECT * FROM audit_logs ORDER BY date DESC, time DESC, id DESC").all();
+    const logs = await db.prepare("SELECT * FROM audit_logs WHERE hidden IS NOT TRUE ORDER BY date DESC, time DESC, id DESC").all();
     const stats = {
       total: logs.length,
       finance: logs.filter(l => l.section === 'Finance').length,
@@ -29,6 +29,15 @@ exports.getSystemArchive = async (req, res) => {
       partners: logs.filter(l => l.section === 'Partners' || l.section === 'Clients').length
     };
     res.json({ logs, stats });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+exports.hideAuditLog = async (req, res) => {
+  try {
+    await db.prepare("UPDATE audit_logs SET hidden = TRUE WHERE id = ?").run(req.params.id);
+    res.json({ success: true, message: 'Log entry hidden' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

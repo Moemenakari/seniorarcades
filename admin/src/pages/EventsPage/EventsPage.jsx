@@ -42,6 +42,8 @@ const Events = () => {
   const [viewStatsEvent, setViewStatsEvent] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedIds, setSelectedIds] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [fetchError, setFetchError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [deleteModal, setDeleteModal] = useState(null);
@@ -74,6 +76,8 @@ const Events = () => {
   }, []);
 
   const fetchEvents = async () => {
+    setIsLoading(true);
+    setFetchError('');
     try {
       const res = await axios.get(`${API}/events`);
       const all = res.data;
@@ -85,6 +89,9 @@ const Events = () => {
       setHistory({ names, clients, managers });
     } catch (err) {
       console.error('Events fetch error', err);
+      setFetchError(err.response?.data?.error || 'Failed to load events. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -416,9 +423,25 @@ const Events = () => {
       </div>
 
       {/* =============================
+          1.5 LOADING / ERROR STATE
+          ============================= */}
+      {isLoading && (
+        <div className="py-20 text-center">
+          <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-slate-400 font-bold uppercase tracking-widest text-sm">Loading Events...</p>
+        </div>
+      )}
+      {!isLoading && fetchError && (
+        <div className="bg-red-50 border border-red-200 rounded-2xl p-5 flex items-center gap-4">
+          <div className="text-red-500 font-bold text-sm flex-1">{fetchError}</div>
+          <button onClick={fetchEvents} className="px-4 py-2 bg-red-600 text-white font-black text-sm rounded-xl hover:bg-red-700 transition uppercase tracking-widest">Retry</button>
+        </div>
+      )}
+
+      {/* =============================
           2. EVENT EDITOR FORM
           ============================= */}
-      {showForm && (
+      {!isLoading && !fetchError && showForm && (
         <div className="premium-card p-6 bg-slate-50/80 border-slate-200">
           <div className="flex justify-between items-center mb-6">
             <h3 className="text-xl font-black text-slate-800 uppercase tracking-tight">{editingEvent ? 'Edit Event' : 'Create Smart Event'}</h3>
@@ -575,7 +598,7 @@ const Events = () => {
       {/* =============================
           3. EVENTS DATA TABLE
           ============================= */}
-      {!showForm && (
+      {!isLoading && !fetchError && !showForm && (
         <div className="premium-card overflow-hidden">
           {/* Table Toolbar */}
           <div className="p-4 border-b border-slate-100 bg-slate-50/50 flex gap-3 items-center">
