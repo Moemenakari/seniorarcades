@@ -36,9 +36,12 @@ exports.getSystemArchive = async (req, res) => {
 
 exports.hideAuditLog = async (req, res) => {
   try {
-    await db.prepare("UPDATE audit_logs SET hidden = TRUE WHERE id = ?").run(req.params.id);
+    // Ensure column exists before updating (idempotent)
+    await db.exec("ALTER TABLE audit_logs ADD COLUMN IF NOT EXISTS hidden BOOLEAN DEFAULT FALSE");
+    await db.prepare("UPDATE audit_logs SET hidden = true WHERE id = ?").run(req.params.id);
     res.json({ success: true, message: 'Log entry hidden' });
   } catch (err) {
+    console.error('hideAuditLog error:', err.message);
     res.status(500).json({ error: err.message });
   }
 };

@@ -116,8 +116,11 @@ const PORT = process.env.PORT || 5000;
 
 const initDB = async () => {
   try {
-    await db.prepare("ALTER TABLE audit_logs ADD COLUMN IF NOT EXISTS hidden BOOLEAN DEFAULT FALSE").run();
-  } catch (e) {}
+    await db.exec("ALTER TABLE audit_logs ADD COLUMN IF NOT EXISTS hidden BOOLEAN DEFAULT FALSE");
+    console.log('✅ DB migration: audit_logs.hidden column ready');
+  } catch (e) {
+    console.error('❌ DB migration error:', e.message);
+  }
 };
 
 app.listen(PORT, async () => {
