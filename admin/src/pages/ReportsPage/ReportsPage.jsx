@@ -265,60 +265,77 @@ const Reports = () => {
             const h3Text = parts.length > 1 ? parts[0] : log.action_type;
             const mainText = parts.length > 1 ? parts[1] : log.description;
 
+            // Extract deletion reason from description
+            const isDeletion = log.action_type === 'Event Deleted' || log.action_type === 'Event Archived' || log.action_type.toLowerCase().includes('delet') || log.action_type.toLowerCase().includes('archiv');
+            const reasonMatch = mainText.match(/Reason:\s*([^.]+)/i);
+            const deletionReason = reasonMatch ? reasonMatch[1].trim() : null;
+
             return (
-              <div key={log.id} className={`bg-white rounded-3xl border transition-all duration-300 ${isExpanded ? 'border-indigo-500 shadow-xl shadow-indigo-100 scale-[1.01]' : 'border-slate-100 hover:border-slate-200 hover:shadow-lg'}`}>
-                <div className="p-6 cursor-pointer" onClick={() => setExpandedLogId(isExpanded ? null : log.id)}>
-                   <div className="flex flex-col md:flex-row justify-between gap-6">
-                      <div className="space-y-4 flex-1">
+              <div key={log.id} className={`bg-white rounded-3xl border transition-all duration-300 ${isDeletion ? 'border-red-100' : ''} ${isExpanded ? 'border-indigo-500 shadow-xl shadow-indigo-100 scale-[1.01]' : 'border-slate-100 hover:border-slate-200 hover:shadow-lg'}`}>
+                <div className="p-4 sm:p-6 cursor-pointer" onClick={() => setExpandedLogId(isExpanded ? null : log.id)}>
+                   <div className="flex flex-col md:flex-row justify-between gap-4 sm:gap-6">
+                      <div className="space-y-3 flex-1">
                          {/* Record Header */}
-                         <div className="flex flex-wrap items-center gap-3">
+                         <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                             <div className="flex items-center gap-1.5 font-black text-slate-800 uppercase tracking-tighter text-sm">
-                               {log.user} <ArrowRight className="w-3.5 h-3.5 text-slate-400" /> 
-                               <span className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-sm ${getSectionColor(log.section)}`}>
+                               {log.user} <ArrowRight className="w-3.5 h-3.5 text-slate-400" />
+                               <span className={`flex items-center gap-1.5 px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm ${getSectionColor(log.section)}`}>
                                   {getSectionIcon(log.section)} {log.section}
                                </span>
                             </div>
-                            <span className="text-sm font-bold text-slate-400 flex items-center gap-1">
+                            <span className="text-xs sm:text-sm font-bold text-slate-400 flex items-center gap-1">
                                <Calendar className="w-3 h-3" /> {log.date}
                             </span>
-                            <span className="text-sm font-bold text-slate-400 flex items-center gap-1">
+                            <span className="text-xs sm:text-sm font-bold text-slate-400 flex items-center gap-1">
                                <History className="w-3 h-3" /> {log.time}
                             </span>
+                            {isDeletion && (
+                              <span className="px-2 py-0.5 bg-red-100 text-red-600 text-xs font-black rounded-full uppercase tracking-widest">Deleted</span>
+                            )}
                          </div>
 
                          {/* Action Content */}
                          <div>
-                            <h2 className="text-2xl font-black text-slate-900 tracking-tighter mb-1 uppercase">
+                            <h2 className="text-lg sm:text-2xl font-black text-slate-900 tracking-tighter mb-1 uppercase">
                                {log.action_type}
                             </h2>
-                            <h3 className="text-base font-bold text-slate-600 mb-2">
-                               {h3Text}
-                            </h3>
-                            <p className="text-base font-black text-slate-900 bg-slate-50 p-4 rounded-2xl border border-slate-100 leading-relaxed">
+                            {log.related_to && (
+                              <p className="text-sm font-black text-slate-700 mb-1">
+                                Item: <span className="text-indigo-600">{log.related_to}</span>
+                              </p>
+                            )}
+                            <h3 className="text-sm sm:text-base font-bold text-slate-600 mb-2">{h3Text}</h3>
+                            <p className="text-sm sm:text-base font-bold text-slate-700 bg-slate-50 p-3 sm:p-4 rounded-2xl border border-slate-100 leading-relaxed">
                                {mainText}
                             </p>
+                            {deletionReason && (
+                              <div className="mt-3 bg-red-50 border border-red-200 rounded-2xl p-3 sm:p-4">
+                                <p className="text-xs font-black text-red-500 uppercase tracking-widest mb-1">Deletion Reason</p>
+                                <p className="text-sm sm:text-base font-bold text-red-800">{deletionReason}</p>
+                              </div>
+                            )}
                          </div>
                       </div>
 
                       {/* Right Panel */}
-                      <div className="flex md:flex-col justify-between md:justify-start items-center md:items-end gap-4 min-w-[120px]">
+                      <div className="flex md:flex-col justify-between md:justify-start items-center md:items-end gap-3 min-w-[100px] sm:min-w-[120px]">
                          <div className="text-right">
                             {log.amount > 0 && (
-                              <p className={`text-2xl font-black ${log.section === 'Finance' && (log.action_type.includes('Expense') || log.action_type.includes('Debt')) ? 'text-red-500' : 'text-green-500'}`}>
+                              <p className={`text-xl sm:text-2xl font-black ${log.section === 'Finance' && (log.action_type.includes('Expense') || log.action_type.includes('Debt')) ? 'text-red-500' : 'text-green-500'}`}>
                                  ${log.amount.toLocaleString()}
                               </p>
                             )}
-                            <p className="text-sm font-black text-slate-400 uppercase tracking-widest mt-1">Record ID #{log.id}</p>
+                            <p className="text-xs sm:text-sm font-black text-slate-400 uppercase tracking-widest mt-1">ID #{log.id}</p>
                          </div>
                          <div className="flex gap-2">
-                            <button 
+                            <button
                               onClick={(e) => { e.stopPropagation(); startEditing(log); }}
-                              className="w-10 h-10 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center hover:bg-indigo-600 hover:text-white transition-all shadow-sm"
+                              className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center hover:bg-indigo-600 hover:text-white transition-all shadow-sm"
                             >
-                               <Edit className="w-4 h-4" />
+                               <Edit className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                             </button>
-                            <button className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${isExpanded ? 'bg-indigo-600 text-white rotate-180' : 'bg-slate-100 text-slate-400'}`}>
-                               {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                            <button className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center transition-all ${isExpanded ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-400'}`}>
+                               {isExpanded ? <ChevronUp className="w-4 h-4 sm:w-5 sm:h-5" /> : <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5" />}
                             </button>
                          </div>
                       </div>
@@ -326,28 +343,36 @@ const Reports = () => {
 
                    {/* Expandable Meta-Data */}
                    {isExpanded && (
-                      <div className="mt-8 pt-8 border-t border-slate-50 grid grid-cols-1 md:grid-cols-3 gap-6 animate-in fade-in slide-in-from-top-4">
+                      <div className="mt-6 sm:mt-8 pt-6 sm:pt-8 border-t border-slate-50 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 animate-in fade-in slide-in-from-top-4">
                          <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                            <p className="text-sm font-black text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                            <p className="text-xs sm:text-sm font-black text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-1.5">
                                <User className="w-3 h-3" /> Admin Performer
                             </p>
-                            <p className="text-base font-black text-slate-800">{log.user}</p>
-                            <p className="text-sm text-slate-400 mt-1 uppercase font-bold tracking-widest">Full Access Level</p>
+                            <p className="text-sm sm:text-base font-black text-slate-800">{log.user}</p>
+                            <p className="text-xs text-slate-400 mt-1 uppercase font-bold tracking-widest">Full Access Level</p>
                          </div>
                          <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                            <p className="text-sm font-black text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-1.5">
-                               <Info className="w-3 h-3" /> Entity Related
+                            <p className="text-xs sm:text-sm font-black text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                               <Info className="w-3 h-3" /> Item Name
                             </p>
-                            <p className="text-base font-black text-slate-800">{log.related_to || 'System-wide Action'}</p>
-                            <p className="text-sm text-slate-400 mt-1 uppercase font-bold tracking-widest">Target Reference</p>
+                            <p className="text-sm sm:text-base font-black text-slate-800">{log.related_to || 'System-wide Action'}</p>
+                            <p className="text-xs text-slate-400 mt-1 uppercase font-bold tracking-widest">Target Reference</p>
                          </div>
                          <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                            <p className="text-sm font-black text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-1.5">
-                               <Calendar className="w-3 h-3" /> Creation Metadata
+                            <p className="text-xs sm:text-sm font-black text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                               <Calendar className="w-3 h-3" /> Timestamp
                             </p>
-                            <p className="text-base font-black text-slate-800">{log.date} {log.time}</p>
-                            <p className="text-sm text-slate-400 mt-1 uppercase font-bold tracking-widest">Timestamp Recorded</p>
+                            <p className="text-sm sm:text-base font-black text-slate-800">{log.date}</p>
+                            <p className="text-xs text-slate-400 mt-1 uppercase font-bold tracking-widest">{log.time}</p>
                          </div>
+                         {deletionReason && (
+                           <div className="sm:col-span-2 md:col-span-3 bg-red-50 p-4 rounded-2xl border border-red-100">
+                             <p className="text-xs sm:text-sm font-black text-red-500 uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                               <Trash2 className="w-3 h-3" /> Deletion Reason
+                             </p>
+                             <p className="text-sm sm:text-base font-bold text-red-800">{deletionReason}</p>
+                           </div>
+                         )}
                       </div>
                    )}
                 </div>

@@ -42,6 +42,11 @@ const Events = () => {
   const [viewStatsEvent, setViewStatsEvent] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedIds, setSelectedIds] = useState([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
+  const [deleteModal, setDeleteModal] = useState(null);
+  const [deleteReason, setDeleteReason] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
   
   // ── STATE MANAGEMENT: FORM DATA ──
   const [form, setForm] = useState({
@@ -68,20 +73,19 @@ const Events = () => {
     fetchEvents();
   }, []);
 
-  const fetchEvents = () => {
-    axios.get(`${API}/events`)
-      .then(res => {
-        const all = res.data;
-        setEvents(all.filter(e => e.status === 'completed'));
-        setUpcomingEvents(all.filter(e => e.status === 'pending'));
-        
-        // Extract unique names for auto-suggestions
-        const names = [...new Set(all.map(e => e.event_name).filter(Boolean))];
-        const clients = [...new Set(all.map(e => e.client_name).filter(Boolean))];
-        const managers = [...new Set(all.map(e => e.manager_name).filter(Boolean))];
-        setHistory({ names, clients, managers });
-      })
-      .catch(err => console.error('Events fetch error', err));
+  const fetchEvents = async () => {
+    try {
+      const res = await axios.get(`${API}/events`);
+      const all = res.data;
+      setEvents(all.filter(e => e.status === 'completed'));
+      setUpcomingEvents(all.filter(e => e.status === 'pending'));
+      const names = [...new Set(all.map(e => e.event_name).filter(Boolean))];
+      const clients = [...new Set(all.map(e => e.client_name).filter(Boolean))];
+      const managers = [...new Set(all.map(e => e.manager_name).filter(Boolean))];
+      setHistory({ names, clients, managers });
+    } catch (err) {
+      console.error('Events fetch error', err);
+    }
   };
 
   // ── MULTI-DAY TRACKING LOGIC ──
@@ -160,14 +164,16 @@ const Events = () => {
   // ── CRUD OPERATIONS ──
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+    setSubmitError('');
+
     const total_net_profit = days.reduce((acc, d) => acc + calculateDayNet(d), 0);
-    
-    // Auto-categorize expenses for database summary fields
+
     let total_food = 0;
     let total_gas = 0;
     let event_manager_pay = 0;
-    
+
     days.forEach(d => {
       (d.expenses || []).forEach(exp => {
         const desc = exp.desc.toLowerCase();
@@ -195,7 +201,7 @@ const Events = () => {
       gas_cost: total_gas,
       event_manager_pay,
       status: 'completed',
-      manual_status: 'live' 
+      manual_status: 'live'
     };
 
     const admin_name = localStorage.getItem('nlg_admin') || 'System';
@@ -207,21 +213,36 @@ const Events = () => {
       } else {
         await axios.post(`${API}/events`, { ...payload, admin_name });
       }
-      fetchEvents();
+      await fetchEvents();
       setShowForm(false);
       setEditingEvent(null);
       resetForm();
-    } catch (err) { 
+    } catch (err) {
       const msg = err.response?.data?.details || err.response?.data?.error || 'Error saving event';
-      alert(msg); 
+      setSubmitError(msg);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm('Delete this event? It will be sent to the archive.')) {
-      const admin_name = localStorage.getItem('nlg_admin') || 'System';
-      await axios.delete(`${API}/events/${id}`, { data: { admin_name } });
-      fetchEvents();
+  const openDeleteModal = (id, name) => {
+    setDeleteModal({ id, name });
+    setDeleteReason('');
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteReason.trim()) return;
+    setIsDeleting(true);
+    const admin_name = localStorage.getItem('nlg_admin') || 'System';
+    try {
+      await axios.delete(`${API}/events/${deleteModal.id}`, { data: { admin_name, reason: deleteReason.trim() } });
+      setDeleteModal(null);
+      setDeleteReason('');
+      await fetchEvents();
+    } catch (err) {
+      alert(err.response?.data?.error || 'Failed to delete event');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -378,17 +399,17 @@ const Events = () => {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
-      
+
       {/* =============================
           1. HEADER & PRIMARY ACTIONS
           ============================= */}
-      <div className="flex justify-between items-end">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-3">
         <div>
           <h2 className="text-2xl font-black text-slate-900 tracking-tighter uppercase leading-none">Event</h2>
           <p className="text-slate-400 text-sm font-medium mt-1">Manage operations and daily details.</p>
         </div>
-        <div className="flex gap-2">
-           <button onClick={() => { setEditingEvent(null); resetForm(); setShowForm(true); }} className="btn-navy flex items-center gap-2">
+        <div className="flex gap-2 w-full sm:w-auto">
+           <button onClick={() => { setEditingEvent(null); resetForm(); setSubmitError(''); setShowForm(true); }} className="btn-navy flex items-center gap-2 w-full sm:w-auto justify-center">
              <Plus className="w-4 h-4" /> Insert Event
            </button>
         </div>
@@ -531,7 +552,20 @@ const Events = () => {
 
               <div className="space-y-4">
                 <textarea className="premium-input bg-slate-50 min-h-[80px]" value={form.advice_note} onChange={e => setForm({...form, advice_note: e.target.value})} placeholder="Event Note / Advice for next time"></textarea>
-                <button type="submit" className="btn-navy w-full py-4 text-sm shadow-xl shadow-blue-900/20">{editingEvent ? 'Update Event Record' : 'Save Event Details'}</button>
+                {submitError && (
+                  <div className="bg-red-50 border border-red-200 text-red-700 font-bold text-sm px-4 py-3 rounded-xl">{submitError}</div>
+                )}
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="btn-navy w-full py-4 text-sm shadow-xl shadow-blue-900/20 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {isSubmitting ? (
+                    <><span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin inline-block" /> Saving...</>
+                  ) : (
+                    editingEvent ? 'Update Event Record' : 'Save Event Details'
+                  )}
+                </button>
               </div>
             </div>
           </form>
@@ -608,7 +642,7 @@ const Events = () => {
                         <div className="flex items-center gap-2 justify-end opacity-0 group-hover:opacity-100 transition-opacity">
                           <button onClick={() => setViewStatsEvent(ev)} className="px-3 py-1.5 text-sm font-black bg-indigo-50 text-indigo-600 rounded-lg">STATS</button>
                           <button onClick={() => handleEdit(ev)} className="p-1.5 text-blue-600 bg-blue-50 rounded-lg"><Edit className="w-4 h-4" /></button>
-                          <button onClick={() => handleDelete(ev.id)} className="p-1.5 text-red-600 bg-red-50 rounded-lg"><Trash2 className="w-4 h-4" /></button>
+                          <button onClick={() => openDeleteModal(ev.id, ev.event_name)} className="p-1.5 text-red-600 bg-red-50 rounded-lg"><Trash2 className="w-4 h-4" /></button>
                         </div>
                       </td>
                     </tr>
@@ -621,7 +655,54 @@ const Events = () => {
       )}
 
       {/* =============================
-          4. INTELLIGENCE MODAL (STATS & AI)
+          4. DELETE WITH REASON MODAL
+          ============================= */}
+      {deleteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden">
+            <div className="p-6 border-b border-slate-100 bg-red-50/50 flex justify-between items-center">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-red-100 text-red-600 flex items-center justify-center rounded-xl"><Trash2 className="w-5 h-5" /></div>
+                <div>
+                  <h2 className="text-lg font-black text-slate-800 uppercase tracking-tight leading-none">Delete Event</h2>
+                  <p className="text-sm font-bold text-slate-500 mt-0.5 truncate max-w-[220px]">{deleteModal.name}</p>
+                </div>
+              </div>
+              <button onClick={() => setDeleteModal(null)} className="p-2 bg-white rounded-xl shadow-sm"><X className="w-5 h-5" /></button>
+            </div>
+            <div className="p-6 space-y-5">
+              <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4">
+                <p className="text-sm font-bold text-amber-800">This event will be archived and removed from active records. This action is logged for audit purposes.</p>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-black text-slate-500 uppercase tracking-widest ml-1">Reason for Deletion <span className="text-red-500">*</span></label>
+                <textarea
+                  className="premium-input bg-slate-50 min-h-[90px] w-full resize-none"
+                  placeholder="e.g. Client cancelled, duplicate entry, event rescheduled..."
+                  value={deleteReason}
+                  onChange={e => setDeleteReason(e.target.value)}
+                />
+              </div>
+              <div className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                Admin: {localStorage.getItem('nlg_admin') || 'System'} &bull; {new Date().toLocaleDateString('en-GB')} {new Date().toLocaleTimeString('en-GB', { hour12: false }).slice(0, 5)}
+              </div>
+              <div className="flex gap-3">
+                <button onClick={() => setDeleteModal(null)} className="flex-1 py-3 bg-slate-100 text-slate-700 font-black text-sm uppercase tracking-widest rounded-2xl hover:bg-slate-200 transition">Cancel</button>
+                <button
+                  onClick={handleDeleteConfirm}
+                  disabled={!deleteReason.trim() || isDeleting}
+                  className="flex-1 py-3 bg-red-600 text-white font-black text-sm uppercase tracking-widest rounded-2xl hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {isDeleting ? <><span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" /> Deleting...</> : 'Confirm Delete'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* =============================
+          5. INTELLIGENCE MODAL (STATS & AI)
           ============================= */}
       {viewStatsEvent && (() => {
          const totalExpenses = (viewStatsEvent.food_cost||0) + (viewStatsEvent.gas_cost||0) + (viewStatsEvent.event_manager_pay||0);

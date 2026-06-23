@@ -222,7 +222,17 @@ exports.archiveEvent = async (req, res) => {
     await archiveTransaction();
 
     const finalAdminName = req.adminName || req.body?.admin_name || 'System';
-    logAction(finalAdminName, 'Events', 'Event Archived', `${event.event_name} archived`, `${event.event_name} was moved to system archive`, 0, event.event_name);
+    const reason = req.body?.reason || 'No reason provided';
+    const section = event.status === 'pending' ? 'Upcoming Events' : 'Events';
+    logAction(
+      finalAdminName,
+      section,
+      'Event Deleted',
+      `${event.event_name} — Reason: ${reason}`,
+      `"${event.event_name}" was deleted and moved to archive. Reason: ${reason}. Deleted by: ${finalAdminName} on ${new Date().toLocaleDateString('en-GB')} at ${new Date().toLocaleTimeString('en-GB', { hour12: false }).slice(0, 5)}.`,
+      0,
+      event.event_name
+    );
 
     res.json({ success: true, message: 'Event archived' });
   } catch (err) {
