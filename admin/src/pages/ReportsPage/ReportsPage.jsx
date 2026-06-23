@@ -186,13 +186,25 @@ const Reports = () => {
             <History className="w-5 h-5 text-slate-500" />
           </button>
           {hiddenIds.length > 0 && (
-            <button
-              onClick={() => setShowHidden(v => !v)}
-              className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-black uppercase tracking-widest border transition shadow-sm ${showHidden ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'}`}
-            >
-              {showHidden ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
-              {hiddenIds.length} Hidden
-            </button>
+            <>
+              <button
+                onClick={() => setShowHidden(v => !v)}
+                className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-black uppercase tracking-widest border transition shadow-sm ${showHidden ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'}`}
+              >
+                {showHidden ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                {hiddenIds.length} Hidden
+              </button>
+              <button
+                onClick={() => {
+                  setHiddenIds([]);
+                  localStorage.removeItem('nlg_hidden_logs');
+                  setShowHidden(false);
+                }}
+                className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-black uppercase tracking-widest border border-green-200 bg-green-50 text-green-700 hover:bg-green-100 transition shadow-sm"
+              >
+                <Eye className="w-4 h-4" /> Restore All
+              </button>
+            </>
           )}
         </div>
       </div>
