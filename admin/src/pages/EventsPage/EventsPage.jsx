@@ -352,11 +352,11 @@ const Events = () => {
         }
       } catch(e) {}
     }
-    const storedExpenses = (ev.food_cost||0) + (ev.gas_cost||0) + (ev.event_manager_pay||0);
+    const storedExpenses = (parseFloat(ev.food_cost)||0) + (parseFloat(ev.gas_cost)||0) + (parseFloat(ev.event_manager_pay)||0);
     return {
-      totalRevenue: (ev.profit||0) + storedExpenses,
+      totalRevenue: (parseFloat(ev.profit)||0) + storedExpenses,
       totalExpenses: storedExpenses,
-      netProfit: ev.profit || 0
+      netProfit: parseFloat(ev.profit) || 0
     };
   };
 
@@ -378,7 +378,7 @@ const Events = () => {
         }
       } catch(e) {}
     }
-    return ev.event_manager_pay || 0;
+    return parseFloat(ev.event_manager_pay) || 0;
   };
 
   const getEventId = (dateStr) => {
@@ -728,8 +728,8 @@ const Events = () => {
           5. INTELLIGENCE MODAL (STATS & AI)
           ============================= */}
       {viewStatsEvent && (() => {
-         const totalExpenses = (viewStatsEvent.food_cost||0) + (viewStatsEvent.gas_cost||0) + (viewStatsEvent.event_manager_pay||0);
-         const totalRevenue = (viewStatsEvent.profit||0) + totalExpenses;
+         const totalExpenses = (parseFloat(viewStatsEvent.food_cost)||0) + (parseFloat(viewStatsEvent.gas_cost)||0) + (parseFloat(viewStatsEvent.event_manager_pay)||0);
+         const totalRevenue = (parseFloat(viewStatsEvent.profit)||0) + totalExpenses;
          return (
          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in">
            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden">
@@ -755,12 +755,12 @@ const Events = () => {
                     </div>
                     <div className="bg-green-50 border border-green-100 rounded-xl p-4 text-center">
                        <p className="text-sm font-black text-green-600 uppercase">Net Profit</p>
-                       <p className="text-2xl font-black text-green-700 mt-1">${(viewStatsEvent.profit||0).toFixed(2)}</p>
+                       <p className="text-2xl font-black text-green-700 mt-1">${(parseFloat(viewStatsEvent.profit)||0).toFixed(2)}</p>
                     </div>
                  </div>
                  <div className="bg-blue-50/50 border border-blue-100 rounded-2xl p-5">
                     <h3 className="text-sm font-black text-blue-800 uppercase flex items-center gap-2 mb-3"><BrainCircuit className="w-4 h-4 text-blue-600" /> AI Insights</h3>
-                    <p className="text-base font-bold text-slate-700">{generateAIAdvice(viewStatsEvent.profit || 0, totalExpenses, viewStatsEvent.food_cost || 0, viewStatsEvent.gas_cost || 0)}</p>
+                    <p className="text-base font-bold text-slate-700">{generateAIAdvice(parseFloat(viewStatsEvent.profit) || 0, totalExpenses, parseFloat(viewStatsEvent.food_cost) || 0, parseFloat(viewStatsEvent.gas_cost) || 0)}</p>
                  </div>
               </div>
            </div>
