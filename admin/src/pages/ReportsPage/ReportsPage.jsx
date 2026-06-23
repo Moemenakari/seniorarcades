@@ -48,9 +48,8 @@ const Reports = () => {
   const [filterDate, setFilterDate] = useState('');
 
   // ── INITIALIZATION ──
-  useEffect(() => {
-    fetchArchive();
-  }, []);
+  useEffect(() => { fetchArchive(); }, []);
+  useEffect(() => { setPage(1); }, [searchQuery, activeTab, filterUser, filterDate, showHidden]);
 
   const fetchArchive = () => {
     setLoading(true);
@@ -146,6 +145,21 @@ const Reports = () => {
   });
 
   const uniqueUsers = ['all', ...new Set(archiveData.logs.map(l => l.user))];
+
+  // ── PAGINATION ──
+  const PAGE_SIZE = 20;
+  const [page, setPage] = useState(1);
+  // Reset to page 1 when filters change
+  const totalPages = Math.ceil(filteredLogs.length / PAGE_SIZE);
+  const pagedLogs = filteredLogs.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  const getActionColor = (action) => {
+    const a = action.toLowerCase();
+    if (a.includes('creat') || a.includes('add') || a.includes('new')) return 'text-green-600 bg-green-50 border-green-200';
+    if (a.includes('updat') || a.includes('edit') || a.includes('chang')) return 'text-blue-600 bg-blue-50 border-blue-200';
+    if (a.includes('delet') || a.includes('archiv') || a.includes('cancel') || a.includes('remov')) return 'text-red-600 bg-red-50 border-red-200';
+    return 'text-slate-600 bg-slate-50 border-slate-200';
+  };
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-20">
@@ -298,8 +312,8 @@ const Reports = () => {
              <div className="w-10 h-10 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
              <p className="text-slate-400 font-bold uppercase tracking-widest text-sm">Accessing System Archive...</p>
           </div>
-        ) : filteredLogs.length > 0 ? (
-          filteredLogs.map(log => {
+        ) : pagedLogs.length > 0 ? (
+          pagedLogs.map(log => {
             const isExpanded = expandedLogId === log.id;
             const isHidden = hiddenIds.includes(log.id);
             const parts = log.description.split('|||');
@@ -342,8 +356,13 @@ const Reports = () => {
 
                          {/* Action Content */}
                          <div>
-                            <h2 className="text-lg sm:text-2xl font-black text-slate-900 tracking-tighter mb-1 uppercase">
+                            <h2 className="text-lg sm:text-2xl font-black text-slate-900 tracking-tighter mb-1 uppercase flex flex-wrap items-center gap-2">
                                {log.action_type}
+                               <span className={`text-xs font-black px-2 py-0.5 rounded-full border uppercase tracking-widest ${getActionColor(log.action_type)}`}>
+                                 {log.action_type.toLowerCase().includes('creat') || log.action_type.toLowerCase().includes('add') || log.action_type.toLowerCase().includes('new') ? 'CREATE' :
+                                  log.action_type.toLowerCase().includes('updat') || log.action_type.toLowerCase().includes('edit') ? 'UPDATE' :
+                                  log.action_type.toLowerCase().includes('delet') || log.action_type.toLowerCase().includes('archiv') || log.action_type.toLowerCase().includes('cancel') ? 'DELETE' : 'ACTION'}
+                               </span>
                             </h2>
                             {log.related_to && (
                               <p className="text-sm font-black text-slate-700 mb-1">
@@ -442,6 +461,37 @@ const Reports = () => {
           </div>
         )}
       </div>
+
+      {/* ── PAGINATION ── */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between bg-white border border-slate-100 rounded-2xl px-4 sm:px-6 py-3 sm:py-4 shadow-sm">
+          <p className="text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-widest">
+            Page <span className="text-slate-700">{page}</span> of <span className="text-slate-700">{totalPages}</span>
+            <span className="hidden sm:inline"> &bull; {filteredLogs.length} total records</span>
+          </p>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+              disabled={page === 1}
+              className="px-3 sm:px-5 py-2 bg-slate-100 text-slate-700 font-black text-sm rounded-xl hover:bg-slate-200 disabled:opacity-40 disabled:cursor-not-allowed transition uppercase tracking-widest"
+            >← Prev</button>
+            <div className="hidden sm:flex gap-1">
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                const pg = page <= 3 ? i + 1 : page - 2 + i;
+                if (pg < 1 || pg > totalPages) return null;
+                return (
+                  <button key={pg} onClick={() => setPage(pg)} className={`w-9 h-9 rounded-xl font-black text-sm transition ${pg === page ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>{pg}</button>
+                );
+              })}
+            </div>
+            <button
+              onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages}
+              className="px-3 sm:px-5 py-2 bg-slate-900 text-white font-black text-sm rounded-xl hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition uppercase tracking-widest"
+            >Next →</button>
+          </div>
+        </div>
+      )}
 
     </div>
   );
