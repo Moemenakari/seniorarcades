@@ -39,6 +39,7 @@ router.get('/income-records', financeController.getAllIncomeRecords);
 router.post('/income', financeController.addIncome);
 router.post('/settle-event', financeController.settleFromEvent);
 router.post('/smart-income', financeController.addSmartIncome);
+router.delete('/income/:id', financeController.deleteIncome);
 
 /**
  * ==========================================

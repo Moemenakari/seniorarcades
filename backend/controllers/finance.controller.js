@@ -369,6 +369,22 @@ exports.deleteFinanceLog = async (req, res) => {
   }
 };
 
+exports.deleteIncome = async (req, res) => {
+  try {
+    const income = await db.prepare("SELECT * FROM income WHERE id = ?").get(req.params.id);
+    if (!income) return res.status(404).json({ error: 'Income record not found' });
+
+    await db.prepare("DELETE FROM income WHERE id = ?").run(req.params.id);
+
+    const adminName = req.adminName || 'Admin';
+    logAction(adminName, 'Finance', 'Income Deleted', `Income Removed — $${income.amount}`, `Income deleted: ${income.notes || income.source || 'General'}`, income.amount, 'Finance');
+
+    res.json({ success: true, message: 'Income record deleted' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
 exports.getAuditLogs = async (req, res) => {
   try {
     const logs = await db.prepare("SELECT * FROM audit_logs ORDER BY date DESC, time DESC, id DESC").all();

@@ -1,18 +1,16 @@
 import { useState, useEffect } from 'react';
 import {
   TrendingUp, TrendingDown, DollarSign, Calendar,
-  Wallet, MapPin, Activity, CheckCircle, AlertTriangle,
-  MessageSquare, Edit3, Trash2, Plus
+  Wallet, MapPin, CheckCircle, AlertTriangle,
+  MessageSquare, Edit3, Trash2, Plus, RefreshCw
 } from 'lucide-react';
-import {
-  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-} from 'recharts';
 import axios from 'axios';
 import { API_BASE_URL } from '../../config';
 
 const API = API_BASE_URL;
 
 const PERIODS = [
+  { id: 'cycle', label: 'Current Cycle' },
   { id: 'today', label: 'Today' },
   { id: 'week',  label: 'Week' },
   { id: 'month', label: 'Month' },
@@ -54,26 +52,42 @@ const Dashboard = () => {
     financeStatus: 'Good', aiInsights: [],
     auditCounts: { creates: 0, updates: 0, deletes: 0, total: 0 }
   });
-  const [period, setPeriod] = useState('month');
+  const [period, setPeriod] = useState('cycle');
   const [customFrom, setCustomFrom] = useState('');
   const [customTo, setCustomTo] = useState('');
   const [loading, setLoading] = useState(true);
   const [dailyNote, setDailyNote] = useState('');
+  const [cycleStartDate, setCycleStartDate] = useState(null);
+  const [cycleLoaded, setCycleLoaded] = useState(false);
+  const [resettingCycle, setResettingCycle] = useState(false);
+  const isSuperAdmin = localStorage.getItem('nlg_admin_role') === 'super';
 
   useEffect(() => {
     const savedNote = localStorage.getItem('dashboardDailyNote');
     if (savedNote) setDailyNote(savedNote);
+    // Load cycle start date from DB
+    axios.get(`${API}/settings/cycle`)
+      .then(res => { setCycleStartDate(res.data.start_date || null); setCycleLoaded(true); })
+      .catch(() => setCycleLoaded(true));
   }, []);
 
+  // Fetch when period changes (skip 'cycle' until cycleLoaded)
   useEffect(() => {
+    if (period === 'cycle' && !cycleLoaded) return;
     if (period !== 'custom') fetchDashboard();
-  }, [period]);
+  }, [period, cycleLoaded, cycleStartDate]);
 
   const fetchDashboard = () => {
     setLoading(true);
-    let url = `${API}/dashboard?period=${period}`;
-    if (period === 'custom' && customFrom && customTo) {
-      url += `&from=${customFrom}&to=${customTo}`;
+    const today = new Date().toISOString().split('T')[0];
+    let url;
+    if (period === 'cycle') {
+      const from = cycleStartDate || '2000-01-01';
+      url = `${API}/dashboard?period=custom&from=${from}&to=${today}`;
+    } else if (period === 'custom' && customFrom && customTo) {
+      url = `${API}/dashboard?period=custom&from=${customFrom}&to=${customTo}`;
+    } else {
+      url = `${API}/dashboard?period=${period}`;
     }
     axios.get(url)
       .then(res => { setStats(res.data); setLoading(false); })
@@ -83,6 +97,21 @@ const Dashboard = () => {
   const handleNoteChange = (e) => {
     setDailyNote(e.target.value);
     localStorage.setItem('dashboardDailyNote', e.target.value);
+  };
+
+  const handleNewCycle = async () => {
+    if (!window.confirm('Start a new financial cycle from today?\n\nAll data will remain saved in History & Reports. The Dashboard will show figures starting from today.')) return;
+    const today = new Date().toISOString().split('T')[0];
+    setResettingCycle(true);
+    try {
+      await axios.put(`${API}/settings/cycle`, { start_date: today });
+      setCycleStartDate(today);
+      setPeriod('cycle');
+    } catch (err) {
+      alert('Failed: ' + (err.response?.data?.error || err.message));
+    } finally {
+      setResettingCycle(false);
+    }
   };
 
   const fmt = (n) => `$${(parseFloat(n) || 0).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
@@ -113,6 +142,17 @@ const Dashboard = () => {
               {stats.financeStatus === 'Risk' ? <AlertTriangle className="w-3 h-3 inline mr-1"/> : <CheckCircle className="w-3 h-3 inline mr-1"/>}
               Finance: {stats.financeStatus}
             </div>
+            {isSuperAdmin && (
+              <button
+                onClick={handleNewCycle}
+                disabled={resettingCycle}
+                className="flex items-center gap-2 px-4 py-1.5 bg-indigo-600 text-white rounded-xl text-sm font-black uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-500/30 disabled:opacity-60"
+                title="Start a new financial cycle — data stays in History"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${resettingCycle ? 'animate-spin' : ''}`} />
+                {resettingCycle ? 'Starting...' : 'New Cycle'}
+              </button>
+            )}
           </div>
         </div>
 
@@ -128,6 +168,19 @@ const Dashboard = () => {
             </button>
           ))}
         </div>
+
+        {/* Cycle Info Banner */}
+        {period === 'cycle' && (
+          <div className="flex items-center gap-3 px-4 py-2.5 bg-indigo-50 border border-indigo-200 rounded-xl text-sm">
+            <RefreshCw className="w-4 h-4 text-indigo-500 flex-shrink-0" />
+            <span className="text-indigo-700 font-bold">
+              {cycleStartDate
+                ? <>Cycle started: <strong>{cycleStartDate}</strong> — showing revenue, expenses &amp; profit from that date only.</>
+                : <>No cycle started yet — showing all-time data. Press <strong>New Cycle</strong> to begin a fresh cycle.</>
+              }
+            </span>
+          </div>
+        )}
 
         {/* Custom Date Range */}
         {period === 'custom' && (
@@ -189,30 +242,6 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6">
 
         <div className="xl:col-span-2 space-y-6">
-          {/* Revenue Chart */}
-          <GlassCard>
-            <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-              <Activity className="w-5 h-5 text-indigo-500" /> Revenue Flow (Last 6 Months)
-            </h3>
-            <div className="h-[180px] sm:h-[260px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={stats.monthlyChart}>
-                  <defs>
-                    <linearGradient id="colorIncome" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#6366f1" stopOpacity={0.4}/>
-                      <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                  <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 11}} dy={10} />
-                  <YAxis hide />
-                  <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }} itemStyle={{ color: '#0f172a', fontWeight: 'bold' }} />
-                  <Area type="monotone" dataKey="income" stroke="#6366f1" strokeWidth={3} fill="url(#colorIncome)" />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-          </GlassCard>
-
           {/* Recent Income + Expenses */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
             <GlassCard className="p-0 overflow-hidden">
@@ -317,6 +346,7 @@ const Dashboard = () => {
 
         </div>
       </div>
+
     </div>
   );
 };

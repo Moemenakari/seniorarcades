@@ -42,6 +42,7 @@ function LoginScreen({ onLogin }) {
     e.preventDefault();
     if ((creds.user === 'moemen' || creds.user === 'abd') && creds.pass === 'admin123') {
        localStorage.setItem('nlg_admin', creds.user);
+       localStorage.setItem('nlg_admin_role', creds.user === 'moemen' ? 'super' : 'admin');
        axios.defaults.headers.common['x-admin-master-key'] = 'admin123';
        axios.defaults.headers.common['x-admin-name'] = creds.user;
        onLogin();
@@ -140,8 +141,8 @@ const Sidebar = ({ isOpen, toggle }) => {
             })}
           </nav>
 
-          <button 
-            onClick={() => { localStorage.removeItem('nlg_admin'); window.location.reload(); }}
+          <button
+            onClick={() => { localStorage.removeItem('nlg_admin'); localStorage.removeItem('nlg_admin_role'); window.location.reload(); }}
             className="mt-auto flex items-center gap-3 px-4 py-3 rounded-xl text-base font-bold text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all"
           >
             <LogOut className="w-4 h-4" /> Log out

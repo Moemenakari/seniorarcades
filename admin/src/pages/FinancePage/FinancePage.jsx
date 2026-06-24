@@ -219,13 +219,23 @@ const Finance = () => {
   };
 
   const handleDeleteExpense = async (expenseId) => {
-    if (window.confirm("Are you sure you want to delete this record?")) {
+    if (window.confirm("Delete this expense? This will reduce total expenses on the dashboard.")) {
       try {
         await axios.delete(`${API}/finances/expense/${expenseId}`);
-        alert("Record deleted.");
         fetchAllData();
       } catch (err) {
         alert("Error deleting record.");
+      }
+    }
+  };
+
+  const handleDeleteIncome = async (incomeId) => {
+    if (window.confirm("Delete this income record? This will reduce total revenue on the dashboard.")) {
+      try {
+        await axios.delete(`${API}/finances/income/${incomeId}`);
+        fetchAllData();
+      } catch (err) {
+        alert("Error deleting income record.");
       }
     }
   };
@@ -582,11 +592,19 @@ const Finance = () => {
                            <Edit className="w-4 h-4" />
                         </button>
 
-                        {item.type === 'expense' && item.status === 'unpaid' && (
+                        {(item.type === 'Expense' || item.type === 'Debt') && item.status !== 'paid' && (
                           <button onClick={() => handleMarkPaid(item.id)} className="px-3 py-2 bg-green-50 text-green-600 hover:bg-green-100 rounded-lg text-sm font-black uppercase transition-colors border border-green-200">
                             Mark Paid
                           </button>
                         )}
+
+                        <button
+                          onClick={() => item.type === 'Income' ? handleDeleteIncome(item.id) : handleDeleteExpense(item.id)}
+                          className="p-2 bg-red-50 text-red-500 hover:bg-red-100 rounded-lg transition-colors border border-red-100"
+                          title="Delete record"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
                       </div>
                     </td>
                   </tr>

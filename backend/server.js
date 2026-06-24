@@ -99,11 +99,56 @@ app.put('/api/settings', adminProtect, async (req, res) => {
   }
 });
 
+app.get('/api/settings/cycle', async (req, res) => {
+  try {
+    const row = await db.prepare("SELECT setting_value FROM settings WHERE setting_key = 'cycle_start_date'").get();
+    res.json({ start_date: row ? row.setting_value : null });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.put('/api/settings/cycle', adminProtect, async (req, res) => {
+  const { start_date } = req.body;
+  try {
+    const existing = await db.prepare("SELECT setting_key FROM settings WHERE setting_key = 'cycle_start_date'").get();
+    if (existing) {
+      await db.prepare("UPDATE settings SET setting_value = ? WHERE setting_key = 'cycle_start_date'").run(start_date);
+    } else {
+      await db.prepare("INSERT INTO settings (setting_key, setting_value) VALUES ('cycle_start_date', ?)").run(start_date);
+    }
+    res.json({ success: true, start_date });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.get('/api/health', (req, res) => res.json({
   status: 'OK',
   message: 'NLG Backend Running',
   timestamp: new Date().toISOString()
 }));
+
+app.post('/api/admin/reset-data', adminProtect, async (req, res) => {
+  const { confirm_token } = req.body;
+  if (confirm_token !== 'RESET_ALL_DATA') {
+    return res.status(400).json({ error: 'Invalid confirmation token' });
+  }
+  try {
+    const tables = [
+      'payments', 'debts', 'income', 'expenses',
+      'archive_financials', 'archive_events', 'finance_logs', 'audit_logs',
+      'ratings', 'sponsorships', 'clients', 'events'
+    ];
+    for (const table of tables) {
+      await db.exec(`DELETE FROM ${table}`);
+    }
+    res.json({ success: true, message: 'All data has been cleared successfully' });
+  } catch (err) {
+    console.error('Reset error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
 
 app.use((err, req, res, next) => {
   console.error('Server Error:', err.stack);
