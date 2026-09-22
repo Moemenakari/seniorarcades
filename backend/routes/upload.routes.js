@@ -1,6 +1,6 @@
 const express = require('express');
 const multer = require('multer');
-const { uploadImage, deleteImage } = require('../utils/supabaseStorage');
+const { uploadImage, deleteImage } = require('../utils/imagekitStorage');
 
 const router = express.Router();
 const upload = multer({

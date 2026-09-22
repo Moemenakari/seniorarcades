@@ -146,7 +146,7 @@ Name: ${bookingName}
 Phone: ${bookingPhone}
 Notes: ${contactDetails.notes || 'N/A'}`;
 
-    const link = `https://wa.me/96170420110?text=${encodeURIComponent(msg)}`;
+    const link = `https://wa.me/96103919876?text=${encodeURIComponent(msg)}`;
     window.open(link, '_blank');
   };
 

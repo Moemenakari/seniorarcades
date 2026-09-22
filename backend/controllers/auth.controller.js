@@ -2,17 +2,17 @@ const db = require('../config/db');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'nlg_arcade_secret_super_key';
+const { JWT_SECRET } = require('../config/env');
 const JWT_EXPIRES_IN = '30d';
 
 const otpStorage = new Map();
 
-const issueSession = (res, user) => {
-  const token = jwt.sign({ id: user.id, role: user.role || 'user' }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
-  const cookieOptions = process.env.NODE_ENV === 'production' ? 'SameSite=None; Secure' : 'SameSite=Lax';
-  res.setHeader('Set-Cookie', `nlg_token=${token}; Max-Age=${30 * 24 * 60 * 60}; Path=/; HttpOnly; ${cookieOptions}`);
-  return token;
-};
+const issueSession = (user) =>
+  jwt.sign(
+    { id: user.id, name: user.name, role: user.role || 'user' },
+    JWT_SECRET,
+    { expiresIn: JWT_EXPIRES_IN }
+  );
 
 exports.register = async (req, res) => {
   const { name, phone, password } = req.body;
@@ -30,7 +30,7 @@ exports.register = async (req, res) => {
     const result = await db.prepare('INSERT INTO users (name, email, password_hash, phone, role) VALUES (?, ?, ?, ?, ?)').run(cleanName, safeEmail, hash, cleanPhone, 'user');
 
     const user = { id: result.lastInsertRowid, name: cleanName, phone: cleanPhone, role: 'user' };
-    const token = issueSession(res, user);
+    const token = issueSession(user);
     res.status(201).json({ success: true, token, user, mode: 'signup' });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -49,8 +49,12 @@ exports.login = async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.password_hash);
     if (!isMatch) return res.status(401).json({ error: 'Incorrect password. Please try again.' });
 
-    const token = issueSession(res, user);
-    res.json({ success: true, token, user: { id: user.id, name: user.name, phone: user.phone, role: user.role || 'user' } });
+    const token = issueSession(user);
+    res.json({
+      success: true,
+      token,
+      user: { id: user.id, name: user.name, phone: user.phone, role: user.role || 'user' }
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

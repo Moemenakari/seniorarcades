@@ -97,7 +97,6 @@ export function ProductDetails() {
     try {
       const res = await fetch(`${API_BASE_URL}/ratings/game`, {
         method: 'POST',
-        credentials: 'include',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ productId: id, rating: userRating, review: userReview })
       });

@@ -87,7 +87,6 @@ export function Testimonials() {
     try {
       const res = await fetch(`${API_BASE_URL}/ratings/platform`, {
         method: 'POST',
-        credentials: 'include',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ rating: userRating, review: userReview })
       });

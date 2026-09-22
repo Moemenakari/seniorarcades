@@ -185,6 +185,7 @@ CREATE TABLE IF NOT EXISTS audit_logs (
   description TEXT,
   amount NUMERIC,
   related_to TEXT,
+  hidden BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -244,13 +245,7 @@ INSERT INTO settings (setting_key, setting_value)
 VALUES ('ticker_text', '🔥 Now accepting bookings for Summer 2026 Festivals across Lebanon! Book now before machines run out. 🎮')
 ON CONFLICT (setting_key) DO NOTHING;
 
--- SPONSORSHIP GALLERY DEFAULT IMAGES
-INSERT INTO sponsorship_gallery (image_url, description, sort_order, is_main) VALUES
-('https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1200', 'The Human Claw Machine in action — a crowd-stopping experience at a major festival.', 0, 1),
-('https://images.unsplash.com/photo-1492684223066-81342ee5ff30?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=800', 'Hundreds of attendees lined up to try the Human Claw Machine at Jounieh Festival.', 1, 0),
-('https://images.unsplash.com/photo-1540575467063-178a50c2df87?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=800', 'Branded sponsor activation — your logo on the machine seen by thousands.', 2, 0),
-('https://images.unsplash.com/photo-1511578314322-379afb476865?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=800', 'Live event setup — the machine becomes the centerpiece of any event zone.', 3, 0),
-('https://images.unsplash.com/photo-1429962714451-bb934ecdc4ec?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=800', 'Crowd engagement at its peak — every round creates a viral social media moment.', 4, 0),
-('https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=800', 'University event activation — students competing for branded prizes.', 5, 0),
-('https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=800', 'Night festival setup — the Human Claw Machine glows under the lights.', 6, 0)
-ON CONFLICT DO NOTHING;
+-- The sponsorship gallery starts empty on purpose.
+-- It previously shipped with stock photos captioned as real Next Level Game
+-- events (named festivals, attendance figures). None of that happened, so it
+-- was removed. Add the real photos through the admin panel.

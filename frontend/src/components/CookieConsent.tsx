@@ -6,15 +6,15 @@ export function CookieConsent() {
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
-    const consent = localStorage.getItem('cookieConsent');
-    if (!consent) {
+    const seen = localStorage.getItem('nlg_storage_notice_seen');
+    if (!seen) {
       const timer = setTimeout(() => setIsVisible(true), 2000);
       return () => clearTimeout(timer);
     }
   }, []);
 
-  const handleAccept = () => {
-    localStorage.setItem('cookieConsent', 'true');
+  const dismiss = () => {
+    localStorage.setItem('nlg_storage_notice_seen', 'true');
     setIsVisible(false);
   };
 
@@ -33,28 +33,24 @@ export function CookieConsent() {
                 <ShieldCheck className="w-5 h-5 text-[#FFD700]" />
               </div>
               <div className="flex-1">
-                <h3 className="text-white font-bold text-base mb-1">Cookies</h3>
+                <h3 className="text-white font-bold text-base mb-1">Your data</h3>
                 <p className="text-gray-400 text-xs leading-tight mb-3">
-                  We use cookies to improve your experience. By clicking "Accept", you agree to our use of cookies.
+                  This site uses no tracking cookies and no advertising. If you log in, your session is
+                  stored on this device only, so you stay signed in.
                 </p>
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={handleAccept}
+                    onClick={dismiss}
                     className="flex-1 bg-[#FFD700] text-[#1a2332] font-bold py-1.5 rounded-lg hover:opacity-90 transition-opacity text-xs"
                   >
-                    Accept
-                  </button>
-                  <button
-                    onClick={() => setIsVisible(false)}
-                    className="px-3 py-1.5 text-gray-400 hover:text-white transition-colors text-xs font-medium"
-                  >
-                    Decline
+                    Got it
                   </button>
                 </div>
               </div>
             </div>
-            <button 
-              onClick={() => setIsVisible(false)}
+            <button
+              onClick={dismiss}
+              aria-label="Dismiss notice"
               className="absolute top-4 right-4 text-gray-500 hover:text-white transition-colors"
             >
               <X size={18} />

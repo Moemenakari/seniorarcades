@@ -9,7 +9,7 @@
 const express = require('express');
 const router = express.Router();
 const authController = require('../controllers/auth.controller');
-const { protect } = require('../utils/authMiddleware');
+const { protect } = require('../middleware/auth.middleware');
 const { adminProtect } = require('../middleware/admin.middleware');
 
 // Public routes

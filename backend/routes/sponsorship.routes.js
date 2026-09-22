@@ -12,6 +12,8 @@
 
 const express = require('express');
 const router = express.Router();
+const { guardIdParams } = require('../middleware/validateId');
+guardIdParams(router);
 const sponsorshipController = require('../controllers/sponsorship.controller');
 const { adminProtect } = require('../middleware/admin.middleware');
 

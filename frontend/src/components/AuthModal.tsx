@@ -91,7 +91,6 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
         
         const res = await fetch(`${API_BASE_URL}/auth/${endpoint}`, {
           method: 'POST',
-          credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),
         });

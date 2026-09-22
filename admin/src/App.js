@@ -19,6 +19,14 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Calendar, CalendarPlus } from 'lucide-react';
+import { API_BASE_URL } from './config';
+import {
+  saveSession,
+  clearSession,
+  getToken,
+  applyAuthHeader,
+  installAuthExpiryHandler,
+} from './adminSession';
 
 // Pages
 import Dashboard from './pages/DashboardPage/DashboardPage';
@@ -36,18 +44,29 @@ import SponsorshipGallery from './pages/SponsorshipPage/SponsorshipPage';
 import ScrollToTop from './ScrollToTop';
 
 function LoginScreen({ onLogin }) {
-  const [creds, setCreds] = useState({ user: '', pass: '' });
-  
-  const handleLogin = (e) => {
+  const [creds, setCreds] = useState({ phone: '', pass: '' });
+  const [error, setError] = useState('');
+  const [busy, setBusy] = useState(false);
+
+  const handleLogin = async (e) => {
     e.preventDefault();
-    if ((creds.user === 'moemen' || creds.user === 'abd') && creds.pass === 'admin123') {
-       localStorage.setItem('nlg_admin', creds.user);
-       localStorage.setItem('nlg_admin_role', creds.user === 'moemen' ? 'super' : 'admin');
-       axios.defaults.headers.common['x-admin-master-key'] = 'admin123';
-       axios.defaults.headers.common['x-admin-name'] = creds.user;
-       onLogin();
-    } else {
-       alert("Invalid credentials. Founders only.");
+    setError('');
+    setBusy(true);
+    try {
+      const { data } = await axios.post(`${API_BASE_URL}/auth/login`, {
+        phone: creds.phone,
+        password: creds.pass,
+      });
+      if (!['admin', 'super'].includes(data?.user?.role)) {
+        setError('This account does not have admin access.');
+        return;
+      }
+      saveSession({ token: data.token, name: data.user.name, role: data.user.role });
+      onLogin();
+    } catch (err) {
+      setError(err?.response?.data?.error || 'Could not sign in. Check your connection.');
+    } finally {
+      setBusy(false);
     }
   };
 
@@ -67,25 +86,34 @@ function LoginScreen({ onLogin }) {
           </div>
           <form onSubmit={handleLogin} className="space-y-6">
              <div className="space-y-2 text-left">
-                <label className="text-sm font-black text-slate-500 uppercase tracking-widest leading-none ml-1">Username</label>
-                <input 
-                  type="text" 
+                <label className="text-sm font-black text-slate-500 uppercase tracking-widest leading-none ml-1">Phone</label>
+                <input
+                  type="tel"
+                  autoComplete="username"
                   className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-6 py-4 outline-none focus:border-navy font-bold text-slate-800 transition-all"
-                  onChange={e => setCreds({...creds, user: e.target.value})}
+                  onChange={e => setCreds({...creds, phone: e.target.value})}
                 />
              </div>
              <div className="space-y-2 text-left">
-                <label className="text-sm font-black text-slate-500 uppercase tracking-widest leading-none ml-1">Master Password</label>
-                <input 
-                  type="password" 
+                <label className="text-sm font-black text-slate-500 uppercase tracking-widest leading-none ml-1">Password</label>
+                <input
+                  type="password"
+                  autoComplete="current-password"
                   className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-6 py-4 outline-none focus:border-navy font-bold text-slate-800 transition-all"
                   onChange={e => setCreds({...creds, pass: e.target.value})}
                 />
              </div>
-             <button className="w-full py-5 bg-[#1e3a8a] text-white font-black uppercase tracking-widest rounded-2xl hover:bg-[#1e40af] transition-all shadow-xl shadow-blue-900/20 active:scale-95">
-                Enter Control Center
+             {error && (
+                <p className="text-sm font-bold text-red-600 bg-red-50 border border-red-100 rounded-xl px-4 py-3 text-left">
+                   {error}
+                </p>
+             )}
+             <button
+                disabled={busy}
+                className="w-full py-5 bg-[#1e3a8a] text-white font-black uppercase tracking-widest rounded-2xl hover:bg-[#1e40af] transition-all shadow-xl shadow-blue-900/20 active:scale-95 disabled:opacity-60"
+             >
+                {busy ? 'Signing in…' : 'Enter Control Center'}
              </button>
-             <p className="text-sm text-slate-400 font-bold uppercase tracking-widest mt-8">Secure Hardware Token Required</p>
           </form>
        </motion.div>
     </div>
@@ -142,7 +170,7 @@ const Sidebar = ({ isOpen, toggle }) => {
           </nav>
 
           <button
-            onClick={() => { localStorage.removeItem('nlg_admin'); localStorage.removeItem('nlg_admin_role'); window.location.reload(); }}
+            onClick={() => { clearSession(); window.location.reload(); }}
             className="mt-auto flex items-center gap-3 px-4 py-3 rounded-xl text-base font-bold text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all"
           >
             <LogOut className="w-4 h-4" /> Log out
@@ -153,15 +181,14 @@ const Sidebar = ({ isOpen, toggle }) => {
   );
 };
 
+installAuthExpiryHandler();
+
 function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(localStorage.getItem('nlg_admin') != null);
+  const [isAuthenticated, setIsAuthenticated] = useState(getToken() != null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   useEffect(() => {
-    if (isAuthenticated) {
-      axios.defaults.headers.common['x-admin-master-key'] = 'admin123';
-      axios.defaults.headers.common['x-admin-name'] = localStorage.getItem('nlg_admin') || 'Admin';
-    }
+    if (isAuthenticated) applyAuthHeader(getToken());
   }, [isAuthenticated]);
 
   if (!isAuthenticated) return <LoginScreen onLogin={() => setIsAuthenticated(true)} />;

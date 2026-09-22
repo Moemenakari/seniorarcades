@@ -10,6 +10,8 @@
 
 const express = require('express');
 const router = express.Router();
+const { guardIdParams } = require('../middleware/validateId');
+guardIdParams(router);
 const productController = require('../controllers/product.controller');
 const { adminProtect } = require('../middleware/admin.middleware');
 

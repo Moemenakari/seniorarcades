@@ -1,4 +1,4 @@
-require('dotenv').config();
+require('./config/env');
 const express = require('express');
 const cors = require('cors');
 const db = require('./config/db');
@@ -15,7 +15,6 @@ app.use(cors({
     if (origin.endsWith('.vercel.app')) return callback(null, true);
     callback(new Error(`CORS: Origin ${origin} not allowed`));
   },
-  credentials: true,
 }));
 app.use(express.json({ limit: '10mb' }));
 
@@ -29,7 +28,7 @@ const authRoutes = require('./routes/auth.routes');
 const ratingRoutes = require('./routes/rating.routes');
 const sponsorshipRoutes = require('./routes/sponsorship.routes');
 const uploadRoutes = require('./routes/upload.routes');
-const { adminProtect } = require('./middleware/admin.middleware');
+const { adminProtect, superProtect } = require('./middleware/admin.middleware');
 
 app.use('/api/events', adminProtect, eventRoutes);
 app.use('/api/finances', adminProtect, financeRoutes);
@@ -108,7 +107,7 @@ app.get('/api/settings/cycle', async (req, res) => {
   }
 });
 
-app.put('/api/settings/cycle', adminProtect, async (req, res) => {
+app.put('/api/settings/cycle', superProtect, async (req, res) => {
   const { start_date } = req.body;
   try {
     const existing = await db.prepare("SELECT setting_key FROM settings WHERE setting_key = 'cycle_start_date'").get();
@@ -129,20 +128,26 @@ app.get('/api/health', (req, res) => res.json({
   timestamp: new Date().toISOString()
 }));
 
-app.post('/api/admin/reset-data', adminProtect, async (req, res) => {
+app.post('/api/admin/reset-data', superProtect, async (req, res) => {
   const { confirm_token } = req.body;
   if (confirm_token !== 'RESET_ALL_DATA') {
     return res.status(400).json({ error: 'Invalid confirmation token' });
   }
   try {
+    // Ordered so that child rows go before the rows they reference,
+    // otherwise the foreign keys reject the delete.
     const tables = [
       'payments', 'debts', 'income', 'expenses',
+      'game_ratings', 'platform_ratings',
       'archive_financials', 'archive_events', 'finance_logs', 'audit_logs',
-      'ratings', 'sponsorships', 'clients', 'events'
+      'events', 'clients'
     ];
-    for (const table of tables) {
-      await db.exec(`DELETE FROM ${table}`);
-    }
+    const clearAll = db.transaction(async () => {
+      for (const table of tables) {
+        await db.exec(`DELETE FROM ${table}`);
+      }
+    });
+    await clearAll();
     res.json({ success: true, message: 'All data has been cleared successfully' });
   } catch (err) {
     console.error('Reset error:', err.message);

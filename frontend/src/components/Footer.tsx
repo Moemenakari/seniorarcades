@@ -186,6 +186,25 @@ export function Footer() {
             © 2026 Next Level Game. All rights reserved. ·
             Elevating Entertainment Experiences Across Lebanon
           </p>
+          <p
+            className="mt-2"
+            style={{
+              fontFamily: "Open Sans, sans-serif",
+              fontWeight: 400,
+              fontSize: "11px",
+              color: "rgba(255,255,255,0.35)",
+            }}
+          >
+            Designed &amp; developed by{" "}
+            <a
+              href="https://github.com/Moemenakari"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-[#FFD700] transition-colors underline-offset-2 hover:underline"
+            >
+              Mouemen Akkarie
+            </a>
+          </p>
         </div>
       </div>
       <AuthModal isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} onSuccess={() => { setIsAuthOpen(false); window.location.reload(); }} />

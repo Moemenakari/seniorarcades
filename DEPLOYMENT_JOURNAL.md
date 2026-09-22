@@ -46,7 +46,7 @@ Old files were broken/outdated, so we removed:
 
 1. Went to supabase.com → New Project
 2. Project name: `nlg`
-3. Database password: `17june2025M@`
+3. Database password: *(redacted — stored only in backend/.env and the host dashboard)*
 4. Region: EU West (closest to Lebanon)
 5. Project ID assigned: `bvkxvzfyhcklulpvklni`
 
@@ -157,14 +157,14 @@ aws-0-eu-west-1.pooler.supabase.com:6543
 ```
 With user format: `postgres.bvkxvzfyhcklulpvklni`
 
-**Problem 2:** Password `17june2025M@` has `@` symbol — breaks URL parsing
+**Problem 2:** A password containing `@` breaks URL parsing
 ```
-postgresql://postgres.xxx:17june2025M@@host  ← double @@ breaks it
+postgresql://user:pass@word@host  ← the second @ breaks it
 ```
 
 **Fix:** URL-encode the `@` as `%40`:
 ```
-DATABASE_URL=postgresql://postgres.bvkxvzfyhcklulpvklni:17june2025M%40@aws-0-eu-west-1.pooler.supabase.com:6543/postgres
+DATABASE_URL=postgresql://user:pass%40word@host:5432/dbname
 ```
 
 **Result:**
@@ -271,11 +271,15 @@ git push origin main
 | Key | Value |
 |---|---|
 | `NODE_ENV` | `production` |
-| `DATABASE_URL` | `postgresql://postgres.bvkxvzfyhcklulpvklni:17june2025M%40@aws-0-eu-west-1.pooler.supabase.com:6543/postgres` |
-| `SUPABASE_URL` | `https://bvkxvzfyhcklulpvklni.supabase.co` |
-| `SUPABASE_SERVICE_KEY` | `<service_role JWT>` |
-| `JWT_SECRET` | `nlg_arcade_super_secret_jwt_2024` |
-| `ADMIN_MASTER_KEY` | `admin123` |
+| `DATABASE_URL` | *(redacted — see backend/.env.example)* |
+| `SUPABASE_URL` | *(no longer used — storage moved to ImageKit)* |
+| `SUPABASE_SERVICE_KEY` | *(no longer used — storage moved to ImageKit)* |
+| `JWT_SECRET` | *(redacted)* |
+| `ADMIN_MASTER_KEY` | *(removed — admin access is a database account)* |
+
+> Real values were written here originally. This repository is public, so they
+> have been redacted and the secrets rotated. Live values belong only in
+> `backend/.env` (gitignored) and the Render dashboard.
 
 6. Clicked **Create Web Service**
 
@@ -371,8 +375,8 @@ After:  "Rent or Sell Arcade Games"
 | GitHub Repo | https://github.com/Moemenakari/seniorarcades |
 
 ### Admin Login
-- Username: `moemen` or `abd`
-- Password: `admin123`
+- Each admin has their own account in the `users` table (role `super` or `admin`)
+- Created with `node backend/scripts/create-admin.js`; no credentials are stored in this repo
 
 ### How Passwords Are Stored
 - User passwords → hashed with `bcryptjs` (10 salt rounds)

@@ -17,15 +17,26 @@ This repository contains the complete full-stack web application: public website
 
 ---
 
-## Admin Credentials
+## Admin Access
 
-| Username | Password | Access |
-|---|---|---|
-| `moemen` | `admin123` | Full Admin |
-| `abd` | `admin123` | Full Admin |
+Admins are rows in the `users` table with role `super` or `admin`. There are no
+default accounts and no credentials in this repository.
 
-> Admin panel is locked by username + password on the frontend.  
-> Backend routes are protected via `x-admin-master-key: admin123` header.
+Create or update one:
+
+```bash
+cd backend
+node scripts/create-admin.js      # prompts for name, phone, role, password
+```
+
+| Role | Can do |
+|---|---|
+| `super` | Everything, including starting a new financial cycle and resetting data |
+| `admin` | Everything except the owner-only actions above |
+
+Sign in at the admin panel with the phone number and password you set. The panel
+sends the JWT as `Authorization: Bearer <token>`; every admin route verifies the
+signature and the role server-side.
 
 ---
 
@@ -37,9 +48,35 @@ Users register on the public website with:
 - Password (min 4 characters)
 
 Passwords are hashed with **bcryptjs** (10 salt rounds) before storage.  
-Authentication uses **JWT tokens** (30-day expiry) stored in HttpOnly cookies.
+Authentication uses **JWT tokens** (30-day expiry) sent as `Authorization: Bearer`.
 
 No default user accounts exist — users must register.
+
+### Session storage: known trade-off
+
+The token lives in `localStorage`, which **any XSS on the page can read**. It is
+there because the API (`onrender.com`) and the sites (`vercel.app`) are different
+origins, so an `HttpOnly` cookie would be a third-party cookie — blocked by
+default in Safari and being phased out in Chrome.
+
+**The stronger setup, for when there is time:** add a Vercel rewrite that proxies
+`/api/*` from the front-end's own domain to the Render URL. That makes the API
+same-origin, so the token can move into a first-party `HttpOnly` cookie that
+JavaScript cannot read. This needs no custom domain — it works on `vercel.app`.
+
+```json
+// frontend/vercel.json
+{
+  "rewrites": [
+    { "source": "/api/:path*", "destination": "https://YOUR-RENDER-URL.onrender.com/api/:path*" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}
+```
+
+Switching also means: re-adding `Set-Cookie` in `auth.controller.js`, reading the
+cookie in `auth.middleware.js` and `admin.middleware.js`, restoring
+`credentials: true` in CORS and `credentials: 'include'` on the front-end fetches.
 
 ---
 
@@ -50,8 +87,8 @@ No default user accounts exist — users must register.
 | Frontend | React 18, TypeScript, TailwindCSS, Framer Motion, shadcn/ui |
 | Admin Panel | React 18, JavaScript, TailwindCSS, Recharts, Axios |
 | Backend | Node.js, Express.js, PostgreSQL (pg) |
-| Database | Supabase PostgreSQL (migrated from SQLite) |
-| Image Storage | Supabase Storage (migrated from Cloudinary) |
+| Database | Neon PostgreSQL (migrated from Supabase, previously SQLite) |
+| Image Storage | ImageKit (migrated from Supabase Storage; Cloudinary is blocked in Lebanon) |
 | Backend Hosting | Render.com (Free tier) |
 | Frontend Hosting | Vercel (Free tier) |
 
@@ -61,24 +98,29 @@ No default user accounts exist — users must register.
 
 ### Backend (`backend/.env`)
 
+See **`backend/.env.example`** for the authoritative list with explanations.
+
 ```env
 PORT=5000
 NODE_ENV=development
 
-# Supabase PostgreSQL (Transaction Pooler — port 6543)
-DATABASE_URL=postgresql://postgres.bvkxvzfyhcklulpvklni:PASSWORD@aws-0-eu-west-1.pooler.supabase.com:6543/postgres
+# Neon PostgreSQL — keep the ?sslmode=require Neon gives you
+DATABASE_URL=postgresql://USER:PASSWORD@HOST.neon.tech/DBNAME?sslmode=require
 
-# Supabase Storage
-SUPABASE_URL=https://bvkxvzfyhcklulpvklni.supabase.co
-SUPABASE_SERVICE_KEY=<service_role JWT from Supabase → Settings → API>
+# ImageKit (Developer options → API keys)
+IMAGEKIT_PUBLIC_KEY=public_xxxxxxxx
+IMAGEKIT_PRIVATE_KEY=private_xxxxxxxx
+IMAGEKIT_URL_ENDPOINT=https://ik.imagekit.io/your_imagekit_id
 
-# Security
-JWT_SECRET=nlg_arcade_super_secret_jwt_2024
-ADMIN_MASTER_KEY=admin123
+# Security — no fallbacks; the server refuses to start without these
+JWT_SECRET=<long random string>
 
 # CORS (production only)
 ALLOWED_ORIGINS=https://nlgarcadesforevents.vercel.app,https://nlg-arcade-admin.vercel.app
 ```
+
+> `ADMIN_MASTER_KEY` no longer exists. Admin access is a database account —
+> see [Admin Access](#admin-access).
 
 ### Frontend & Admin (set in Vercel dashboard)
 

@@ -55,10 +55,7 @@ const UsersPage = () => {
 
   const fetchUsers = async () => {
     try {
-      // Send the master key header to authenticate with the backend
-      const res = await axios.get(`${API}/auth/users`, {
-        headers: { 'x-admin-master-key': 'admin123' }
-      });
+      const res = await axios.get(`${API}/auth/users`);
       if (res.data.success) {
         setUsers(res.data.users);
       }

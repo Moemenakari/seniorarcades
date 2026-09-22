@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import axios from 'axios';
 import { API_BASE_URL } from '../../config';
+import { isSuperAdmin as isSuper } from '../../adminSession';
 
 const API = API_BASE_URL;
 
@@ -60,7 +61,7 @@ const Dashboard = () => {
   const [cycleStartDate, setCycleStartDate] = useState(null);
   const [cycleLoaded, setCycleLoaded] = useState(false);
   const [resettingCycle, setResettingCycle] = useState(false);
-  const isSuperAdmin = localStorage.getItem('nlg_admin_role') === 'super';
+  const isSuperAdmin = isSuper();
 
   useEffect(() => {
     const savedNote = localStorage.getItem('dashboardDailyNote');

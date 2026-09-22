@@ -1,7 +1,9 @@
 const express = require('express');
 const router = express.Router();
+const { guardIdParams } = require('../middleware/validateId');
+guardIdParams(router, ['id', 'productId']);
 const ratingController = require('../controllers/rating.controller');
-const { protect } = require('../utils/authMiddleware');
+const { protect } = require('../middleware/auth.middleware');
 const { adminProtect } = require('../middleware/admin.middleware');
 
 router.post('/game', protect, ratingController.rateGame);

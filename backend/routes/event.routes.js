@@ -10,6 +10,8 @@
 
 const express = require('express');
 const router = express.Router();
+const { guardIdParams } = require('../middleware/validateId');
+guardIdParams(router);
 const eventController = require('../controllers/event.controller');
 
 /**

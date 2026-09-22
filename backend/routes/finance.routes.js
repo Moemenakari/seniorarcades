@@ -10,6 +10,8 @@
 
 const express = require('express');
 const router = express.Router();
+const { guardIdParams } = require('../middleware/validateId');
+guardIdParams(router);
 const financeController = require('../controllers/finance.controller');
 
 /**
