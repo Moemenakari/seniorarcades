@@ -17,10 +17,17 @@ import { FeaturedCatalog } from '../../components/FeaturedCatalog';
 import { ServiceSection } from '../../components/ServiceSection';
 import { LocationCarousel } from '../../components/LocationCarousel';
 import { PopularRatings } from '../../components/PopularRatings';
+import { Seo } from '../../components/Seo';
 
 export function Home() {
   return (
     <>
+      <Seo
+        title="Arcade & Carnival Game Rental Lebanon | Next Level Game"
+        description="Rent arcade, carnival & inflatable games for parties, weddings, corporate events and festivals in Beirut, Tripoli and all across Lebanon. Book your event today!"
+        canonical="/"
+      />
+
       {/* =============================
           1. Sticky Trust Overlay
           ============================= */}

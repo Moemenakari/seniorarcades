@@ -6,6 +6,7 @@ import EmailIcon from '@mui/icons-material/Email';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 import StarIcon from '@mui/icons-material/Star';
 import SendIcon from '@mui/icons-material/Send';
+import { Seo } from '../../components/Seo';
 
 export function AboutUs() {
   const [showQuickForm, setShowQuickForm] = useState(false);
@@ -20,6 +21,11 @@ export function AboutUs() {
 
   return (
     <div className="bg-[#f8f9fb] min-h-screen pb-16 font-sans">
+      <Seo
+        title="About Next Level Game | Arcade Rental Company Lebanon"
+        description="Meet Next Level Game, Lebanon's leading arcade and carnival rental company based in Tripoli, proudly serving events across Beirut and the whole country."
+        canonical="/about"
+      />
       {/* SECTION 1: ABOUT NEXT LEVEL GAME */}
       <section className="bg-[#1a2332] py-20 px-4 text-center">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-4xl mx-auto">

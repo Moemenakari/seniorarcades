@@ -5,6 +5,7 @@ import StarIcon from '@mui/icons-material/Star';
 import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
 import { ImageWithFallback } from '../../components/figma/ImageWithFallback';
 import { AuthModal } from '../../components/AuthModal';
+import { Seo } from '../../components/Seo';
 import { getAuthToken } from '../../utils/authSession';
 import { API_BASE_URL } from '../../config';
 
@@ -51,7 +52,7 @@ export function ProductDetails() {
 
   useEffect(() => {
     if (!id) return;
-    const controller = new AbortController();
+    let ignore = false;
     const load = async () => {
       setLoading(true);
       setProduct(null);
@@ -59,31 +60,29 @@ export function ProductDetails() {
       setSelectedImage(0);
       try {
         const productRes = await fetch(`${API_BASE_URL}/products/${id}`, {
-          signal: controller.signal,
           cache: 'no-store'
         });
         if (!productRes.ok) throw new Error('Failed to load product');
         const productData = await productRes.json();
-        console.debug('[ProductDetails] product id:', id);
-        console.debug('[ProductDetails] fetched product:', productData);
+        if (ignore) return;
         setProduct(productData);
 
         const ratingsRes = await fetch(`${API_BASE_URL}/ratings/game/${id}`, {
-          signal: controller.signal,
           cache: 'no-store'
         });
         const ratingsData = await ratingsRes.json();
+        if (ignore) return;
         if (ratingsData?.success) setRatings(ratingsData.ratings || []);
       } catch (err: any) {
-        if (err?.name !== 'AbortError') {
+        if (!ignore) {
           console.error('[ProductDetails] fetch error:', err);
         }
       } finally {
-        setLoading(false);
+        if (!ignore) setLoading(false);
       }
     };
     load();
-    return () => controller.abort();
+    return () => { ignore = true; };
   }, [id]);
 
   const submitRating = async () => {
@@ -136,6 +135,38 @@ export function ProductDetails() {
     return [product.image_url, product.image_url2, product.image_url3].filter(Boolean) as string[];
   }, [product]);
 
+  const productJsonLd = useMemo(() => {
+    if (!product) return undefined;
+    const price = product.price?.min ?? product.min_price ?? product.average_price;
+    return {
+      '@context': 'https://schema.org',
+      '@type': 'Product',
+      name: product.name,
+      description: product.description || `${product.name} available for rent in Lebanon.`,
+      category: product.category,
+      image: images.length ? images : undefined,
+      offers: {
+        '@type': 'Offer',
+        priceCurrency: 'USD',
+        ...(typeof price === 'number' ? { price } : {}),
+        availability:
+          product.availability === 'available' || product.status === 'active'
+            ? 'https://schema.org/InStock'
+            : 'https://schema.org/OutOfStock',
+        areaServed: 'LB',
+      },
+      ...(ratings.length > 0
+        ? {
+            aggregateRating: {
+              '@type': 'AggregateRating',
+              ratingValue: averageRating,
+              reviewCount: ratings.length,
+            },
+          }
+        : {}),
+    };
+  }, [product, images, ratings, averageRating]);
+
   const whatsappNumber = "+96103919876";
   const whatsappMessage = `Hello, I'm interested in renting/booking the ${product?.name || 'product'}. Can you provide more details?`;
   const whatsappLink = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(whatsappMessage)}`;
@@ -162,6 +193,12 @@ export function ProductDetails() {
   if (!product) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-[#f8f9fb]">
+        <Seo
+          title="Product Not Found | Next Level Game Lebanon"
+          description="This arcade or carnival game could not be found. Browse our full catalog of games available for rent across Lebanon, from Beirut to Tripoli."
+          canonical="/catalog"
+          noindex
+        />
         <SportsEsportsIcon style={{ fontSize: 48, color: '#d1d5db' }} />
         <h2 className="text-lg font-bold mt-3 text-gray-700">Product Not Found</h2>
         <Link to="/" className="text-[#E53935] hover:underline flex items-center gap-1.5 mt-3 text-sm font-semibold">
@@ -173,6 +210,13 @@ export function ProductDetails() {
 
   return (
     <div className="bg-white min-h-screen">
+      <Seo
+        title={`${product.name} Rental in Lebanon | Next Level Game`}
+        description={`Rent the ${product.name} for your next event in Lebanon. ${product.category || 'Arcade'} game available in Beirut, Tripoli and nationwide. Book via WhatsApp!`}
+        canonical={`/product/${id}`}
+        image={images[0]}
+        jsonLd={productJsonLd}
+      />
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Link to="/catalog" className="inline-flex items-center gap-1.5 text-gray-500 hover:text-[#E53935] text-sm font-semibold mb-6 transition-colors">
           <ArrowBackIcon style={{ fontSize: 16 }} /> Back to Catalog

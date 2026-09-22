@@ -12,6 +12,7 @@ import {
   ArrowRight, DollarSign, Settings, ShieldCheck, Zap
 } from 'lucide-react';
 import { ImageWithFallback } from '../../components/figma/ImageWithFallback';
+import { Seo } from '../../components/Seo';
 import { Link } from 'react-router-dom';
 
 // =============================
@@ -95,7 +96,12 @@ const revenueSteps = [
 export function Services() {
   return (
     <div className="bg-white">
-      
+      <Seo
+        title="Event Entertainment Services in Lebanon | Next Level Game"
+        description="Full-service arcade and carnival entertainment for events across Lebanon — delivery, setup, staffing and 24/7 support in Beirut, Tripoli and beyond too."
+        canonical="/services"
+      />
+
       {/* ── 1. HERO ── */}
       <section className="relative py-20 text-white overflow-hidden" style={{ backgroundColor: '#1a2332' }}>
         <div className="absolute inset-0 opacity-10">

@@ -22,6 +22,7 @@ import {
   ChevronLeft, ChevronRight, X
 } from 'lucide-react';
 import { ImageWithFallback } from '../../components/figma/ImageWithFallback';
+import { Seo } from '../../components/Seo';
 import { Link } from 'react-router-dom';
 import { API_BASE_URL } from '../../config';
 
@@ -247,6 +248,11 @@ export function Sponsorship() {
 
   return (
     <div className="bg-white">
+      <Seo
+        title="Event Sponsorship & Brand Activation Lebanon | NLG"
+        description="Advertise your brand at Lebanon's biggest festivals and events. In-game logo placement, crowd activation and social buzz in Beirut, Tripoli and beyond."
+        canonical="/sponsorship"
+      />
 
       {/* ══════════════════════════════════════════
           1. HERO SECTION

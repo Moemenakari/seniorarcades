@@ -13,6 +13,7 @@ import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 import InfoIcon from '@mui/icons-material/Info';
 import { AuthModal } from '../../components/AuthModal';
+import { Seo } from '../../components/Seo';
 import { getAuthToken, getStoredUser } from '../../utils/authSession';
 import { API_BASE_URL } from '../../config';
 
@@ -151,8 +152,14 @@ Notes: ${contactDetails.notes || 'N/A'}`;
 
   return (
     <>
+    <Seo
+      title="Build Your Custom Arcade Event | Next Level Game Lebanon"
+      description="Plan your own arcade and carnival event in minutes. Pick your games, set a budget, and get an instant quote for events anywhere in Lebanon, Tripoli to Beirut."
+      canonical="/build-your-event"
+    />
     <div className="bg-[#f8f9fa] min-h-screen pb-16 font-sans">
-      
+      <h1 className="sr-only">Build Your Custom Arcade & Carnival Event in Lebanon</h1>
+
       {/* Progress Bar */}
       <div className="bg-white border-b border-gray-100 sticky top-0 z-50 shadow-sm">
         <div className="max-w-3xl mx-auto px-4 py-3">
@@ -178,7 +185,7 @@ Notes: ${contactDetails.notes || 'N/A'}`;
           {step === 1 && (
             <motion.div key="s1" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
               <div className="text-center mb-8">
-                <h1 className="text-2xl font-black text-[#1a2332] mb-2">What kind of event are you planning?</h1>
+                <h2 className="text-2xl font-black text-[#1a2332] mb-2">What kind of event are you planning?</h2>
                 <p className="text-gray-500 text-sm">Select one to get started.</p>
               </div>
 
@@ -202,7 +209,7 @@ Notes: ${contactDetails.notes || 'N/A'}`;
           {step === 2 && (
             <motion.div key="s2" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
               <div className="text-center mb-8">
-                <h1 className="text-2xl font-black text-[#1a2332] mb-2">Set your target budget</h1>
+                <h2 className="text-2xl font-black text-[#1a2332] mb-2">Set your target budget</h2>
                 <p className="text-gray-500 text-sm">We'll help you stay within this range.</p>
               </div>
 
@@ -330,7 +337,7 @@ Notes: ${contactDetails.notes || 'N/A'}`;
           {step === 5 && (
             <motion.div key="s5" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
               <div className="text-center mb-8">
-                <h1 className="text-2xl font-black text-[#1a2332] mb-2">Final Details</h1>
+                <h2 className="text-2xl font-black text-[#1a2332] mb-2">Final Details</h2>
                 <p className="text-gray-500 text-sm">Where should we send your custom quote?</p>
               </div>
 

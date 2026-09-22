@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import { ImageWithFallback } from '../../components/figma/ImageWithFallback';
+import { Seo } from '../../components/Seo';
 import { API_BASE_URL } from '../../config';
 
 type LabelType = 'new' | 'trend' | 'sale';
@@ -69,6 +70,12 @@ export function Catalog() {
 
   return (
     <div className="bg-white min-h-screen">
+      <Seo
+        title="Arcade Game Catalog for Rent in Lebanon | Next Level Game"
+        description="Browse 50+ arcade, retro, VR and carnival games for rent across Lebanon. Perfect for parties, festivals and corporate events in Beirut and Tripoli. Book now!"
+        canonical="/catalog"
+      />
+
       {/* HERO */}
       <section className="relative py-14 overflow-hidden" style={{ backgroundColor: '#1a2332' }}>
         <div className="absolute inset-0 opacity-5" style={{
