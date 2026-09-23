@@ -1,24 +1,20 @@
 /**
  * ============================================================
- * SPONSORSHIP PAGE
+ * HUMAN CLAW MACHINE PAGE  (/sponsorship)
  * ============================================================
- * Purpose: Showcases brand partnership opportunities with
- * Next Level Game. Features the Human Claw Machine section
- * with a dynamic photo gallery managed via the Admin Panel.
+ * The Human Claw Machine is the strongest commercial product,
+ * so it owns this page. Brand sponsorship is one section inside
+ * it rather than the whole story.
  *
- * Key Sections:
- *  1. Hero Banner
- *  2. Stats Strip
- *  3. Human Claw Machine (with Admin-managed gallery)
- *  4. Sponsorship Opportunities Grid
- *  5. Lead CTA
+ * Photos sit directly under the H1 because this product sells
+ * on being seen.
  * ============================================================
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  ArrowRight, Star, Zap, Users, TrendingUp, Eye, Heart,
+  ArrowRight, Star, Zap, Users, TrendingUp, Eye, Gift, PartyPopper,
   ChevronLeft, ChevronRight, X
 } from 'lucide-react';
 import { ImageWithFallback } from '../../components/figma/ImageWithFallback';
@@ -26,11 +22,6 @@ import { Seo } from '../../components/Seo';
 import { Link } from 'react-router-dom';
 import { API_BASE_URL } from '../../config';
 
-// =============================
-// TYPE DEFINITIONS
-// =============================
-
-/** A single gallery image record from the API */
 interface GalleryImage {
   id: number;
   image_url: string;
@@ -39,77 +30,87 @@ interface GalleryImage {
   is_main: number;
 }
 
-// =============================
-// STATIC DATA CONFIGURATION
-// =============================
+const WHATSAPP =
+  'https://wa.me/96103919876?text=Hi%2C%20I%27d%20like%20to%20book%20the%20Human%20Claw%20Machine.';
 
-/** Sponsorship opportunity cards */
+/**
+ * Shown until real photos are uploaded through the admin panel.
+ * Swapping one out is an upload, not a code change.
+ */
+const PLACEHOLDERS: { url: string; alt: string }[] = [
+  { url: '/images/human-claw-machine-1.svg', alt: 'Human claw machine rental in Lebanon set up for a brand activation, machine wrapped in sponsor branding' },
+  { url: '/images/human-claw-machine-2.svg', alt: 'Human claw machine hired for a birthday party in Lebanon, child harnessed and reaching for a prize' },
+  { url: '/images/human-claw-machine-3.svg', alt: 'Crowd watching the human claw machine at a festival in Lebanon' },
+  { url: '/images/human-claw-machine-4.svg', alt: 'Human claw machine branded with a sponsor logo and flags at a store opening in Lebanon' },
+  { url: '/images/human-claw-machine-5.svg', alt: 'Player harnessed inside the human claw machine grabbing prizes at an event in Lebanon' },
+];
+
+/** Opportunities a sponsor gets. */
 const OPPORTUNITIES = [
   {
     icon: Eye,
-    title: 'In-Game Logo Placement',
+    title: 'Your Logo on the Machine',
     description:
-      'Your brand logo displayed prominently inside the game cabinet — seen by every player and spectator throughout the event.',
+      'The machine is wrapped in your branding and flags. Every player, every spectator and every phone camera in the crowd sees it.',
     color: '#E53935',
   },
   {
-    icon: Users,
-    title: 'Crowd Activation',
+    icon: Gift,
+    title: 'Your Products as the Prizes',
     description:
-      'Turn your brand into a live experience. Players interact with your product concept while playing — unforgettable brand recall.',
+      'Fill the machine with your own stock and giveaways. People do not just see the product — they climb in and grab it.',
     color: '#1a2332',
   },
   {
-    icon: TrendingUp,
-    title: 'Social Media Amplification',
+    icon: Users,
+    title: 'A Queue That Does Not Move On',
     description:
-      "Every viral moment from the event features your brand. We capture, post, and tag — your logo travels far beyond the venue.",
+      'Unlike a banner or a stand, people wait in line for a turn. Your brand holds their attention for the length of the event.',
     color: '#FFD700',
   },
   {
-    icon: Zap,
-    title: 'Product Integration',
+    icon: TrendingUp,
+    title: 'Footage Worth Sharing',
     description:
-      'Distribute your product samples alongside game prizes. Players win branded rewards — direct product trial at scale.',
+      'Every round is filmed by the crowd. Your activation travels to social media without you paying for the reach.',
     color: '#E53935',
   },
 ];
 
-/** Key performance statistics */
-const STATS = [
-  { value: '500+', label: 'Events Powered' },
-  { value: '200K+', label: 'Attendees Reached' },
-  { value: '15+', label: 'Brand Partners' },
-  { value: '98%', label: 'Brand Satisfaction' },
+/** Where the machine gets booked. */
+const USE_CASES = [
+  {
+    icon: Zap,
+    title: 'Brand Launches & Store Openings',
+    body:
+      'Brands entering the Lebanese market book the human claw machine for openings and activations — chocolate companies, fashion retailers and sportswear names among them. The machine is branded with their logo and loaded with their products, so the giveaway is the advertisement.',
+  },
+  {
+    icon: PartyPopper,
+    title: 'Birthdays & Private Parties',
+    body:
+      'It is the attraction people remember from the party. We deliver, install and run it anywhere in Lebanon, fill it with prizes you choose, and our staff keep the turns moving so nobody is left waiting.',
+  },
+  {
+    icon: Users,
+    title: 'Festivals & Large Events',
+    body:
+      'At a festival the human claw machine draws its own crowd and holds it. We handle power planning, safety, setup and on-site staff, and it can arrive alongside the rest of our arcade and carnival games as one complete event package.',
+  },
 ];
 
-// =============================
-// SUB-COMPONENTS
-// =============================
-
-/**
- * LIGHTBOX MODAL
- * --------------
- * Full-screen image viewer with navigation arrows and description.
- * Supports keyboard navigation (Escape, ArrowLeft, ArrowRight).
- */
+// ── LIGHTBOX ──
 function Lightbox({
-  images,
-  currentIndex,
-  onClose,
-  onPrev,
-  onNext,
+  images, currentIndex, onClose, onPrev, onNext,
 }: {
-  images: GalleryImage[];
+  images: { url: string; alt: string }[];
   currentIndex: number;
   onClose: () => void;
   onPrev: () => void;
   onNext: () => void;
 }) {
   const img = images[currentIndex];
-  if (!img) return null;
 
-  // Keyboard navigation support
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
@@ -120,70 +121,46 @@ function Lightbox({
     return () => window.removeEventListener('keydown', handleKey);
   }, [onClose, onPrev, onNext]);
 
+  if (!img) return null;
+
   return (
     <AnimatePresence>
       <motion.div
         className="fixed inset-0 z-[200] flex items-center justify-center p-4"
         style={{ backgroundColor: 'rgba(0,0,0,0.92)' }}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
+        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
         onClick={onClose}
       >
-        {/* Close button */}
-        <button
-          className="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors z-10"
-          onClick={onClose}
-          aria-label="Close lightbox"
-        >
+        <button className="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors z-10"
+          onClick={onClose} aria-label="Close image viewer">
           <X className="w-6 h-6 text-white" />
         </button>
 
-        {/* Previous arrow */}
         {images.length > 1 && (
-          <button
-            className="absolute left-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-white/10 hover:bg-white/20 transition-colors z-10"
-            onClick={(e) => { e.stopPropagation(); onPrev(); }}
-            aria-label="Previous image"
-          >
+          <button className="absolute left-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-white/10 hover:bg-white/20 transition-colors z-10"
+            onClick={(e) => { e.stopPropagation(); onPrev(); }} aria-label="Previous photo">
             <ChevronLeft className="w-6 h-6 text-white" />
           </button>
         )}
 
-        {/* Main image */}
         <motion.div
-          key={img.id}
+          key={img.url}
           className="max-w-4xl w-full mx-12"
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
+          initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 0.25 }}
           onClick={(e) => e.stopPropagation()}
         >
-          <img
-            src={img.image_url}
-            alt={img.description || 'Gallery image'}
-            className="w-full max-h-[75vh] object-contain rounded-xl"
-          />
-          {img.description && (
-            <p
-              className="text-white/80 text-center mt-4 text-sm leading-relaxed max-w-2xl mx-auto"
-              style={{ fontFamily: 'Open Sans, sans-serif' }}
-            >
-              {img.description}
-            </p>
-          )}
-          <p className="text-white/40 text-center text-xs mt-2">
-            {currentIndex + 1} / {images.length}
+          <img src={img.url} alt={img.alt} className="w-full max-h-[75vh] object-contain rounded-xl" />
+          <p className="text-white/80 text-center mt-4 text-sm leading-relaxed max-w-2xl mx-auto"
+            style={{ fontFamily: 'Open Sans, sans-serif' }}>
+            {img.alt}
           </p>
+          <p className="text-white/40 text-center text-xs mt-2">{currentIndex + 1} / {images.length}</p>
         </motion.div>
 
-        {/* Next arrow */}
         {images.length > 1 && (
-          <button
-            className="absolute right-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-white/10 hover:bg-white/20 transition-colors z-10"
-            onClick={(e) => { e.stopPropagation(); onNext(); }}
-            aria-label="Next image"
-          >
+          <button className="absolute right-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-white/10 hover:bg-white/20 transition-colors z-10"
+            onClick={(e) => { e.stopPropagation(); onNext(); }} aria-label="Next photo">
             <ChevronRight className="w-6 h-6 text-white" />
           </button>
         )}
@@ -192,27 +169,13 @@ function Lightbox({
   );
 }
 
-// =============================
-// MAIN COMPONENT
-// =============================
-
+// ── PAGE ──
 export function Sponsorship() {
-  // ── CONTACT LINK ──
-  const whatsapp =
-    'https://wa.me/96103919876?text=Hi%2C%20I%27m%20interested%20in%20sponsorship%20opportunities%20with%20Next%20Level%20Game.';
-
-  // ── GALLERY STATE ──
   const [gallery, setGallery] = useState<GalleryImage[]>([]);
   const [galleryLoading, setGalleryLoading] = useState(true);
-
-  // ── LIGHTBOX STATE ──
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
 
-  /**
-   * Fetch gallery images from the API.
-   * Backend returns them sorted: main image first, then by sort_order ASC.
-   */
   const fetchGallery = useCallback(() => {
     setGalleryLoading(true);
     fetch(`${API_BASE_URL}/sponsorship/gallery`)
@@ -227,385 +190,224 @@ export function Sponsorship() {
       });
   }, []);
 
-  useEffect(() => {
-    fetchGallery();
-  }, [fetchGallery]);
+  useEffect(() => { fetchGallery(); }, [fetchGallery]);
 
-  // Derived values: main hero image and additional thumbnails
-  const mainImage = gallery.find((img) => img.is_main === 1) || gallery[0] || null;
-  const thumbnails = gallery.filter((img) => img !== mainImage);
+  // Real photos win; placeholders only fill the space until they exist.
+  const photos = gallery.length
+    ? gallery.map((img) => ({
+        url: img.image_url,
+        alt: img.description || 'Human claw machine rental in Lebanon at a live event',
+      }))
+    : PLACEHOLDERS;
 
-  // ── LIGHTBOX HELPERS ──
-  const openLightbox = (index: number) => {
-    setLightboxIndex(index);
-    setLightboxOpen(true);
-  };
-  const closeLightbox = () => setLightboxOpen(false);
-  const prevImage = () =>
-    setLightboxIndex((i) => (i - 1 + gallery.length) % gallery.length);
-  const nextImage = () =>
-    setLightboxIndex((i) => (i + 1) % gallery.length);
+  const openLightbox = (index: number) => { setLightboxIndex(index); setLightboxOpen(true); };
+  const prevImage = () => setLightboxIndex((i) => (i - 1 + photos.length) % photos.length);
+  const nextImage = () => setLightboxIndex((i) => (i + 1) % photos.length);
+
+  const jsonLd = [
+    {
+      '@context': 'https://schema.org',
+      '@type': 'Service',
+      name: 'Human Claw Machine Rental',
+      serviceType: 'Human claw machine rental for events',
+      description:
+        'Rent the human claw machine in Lebanon for brand activations, store openings, birthdays and festivals. A person is harnessed in and becomes the claw, grabbing prizes while the crowd watches.',
+      provider: { '@id': 'https://nlgarcadesforevents.vercel.app/#organization' },
+      areaServed: { '@type': 'Country', name: 'Lebanon' },
+      availableChannel: {
+        '@type': 'ServiceChannel',
+        serviceUrl: 'https://nlgarcadesforevents.vercel.app/sponsorship',
+      },
+    },
+    {
+      '@context': 'https://schema.org',
+      '@type': 'Product',
+      name: 'Human Claw Machine',
+      description:
+        'A life-sized claw machine for events in Lebanon. A harnessed player becomes the claw and grabs prizes. Available branded with a sponsor logo and loaded with the sponsor\'s own products.',
+      category: 'Event attraction rental',
+      brand: { '@type': 'Brand', name: 'Next Level Game' },
+      offers: {
+        '@type': 'Offer',
+        priceCurrency: 'USD',
+        availability: 'https://schema.org/InStock',
+        areaServed: 'LB',
+        url: 'https://nlgarcadesforevents.vercel.app/sponsorship',
+      },
+    },
+  ];
 
   return (
     <div className="bg-white">
       <Seo
-        title="Event Sponsorship & Brand Activation Lebanon | NLG"
-        description="Advertise your brand at Lebanon's biggest festivals and events. In-game logo placement, crowd activation and social buzz in Beirut, Tripoli and beyond."
+        title="Human Claw Machine Rental in Lebanon | Next Level Game"
+        description="Rent the human claw machine in Lebanon for brand activations, store openings, birthdays and festivals. Branded with your logo, filled with your prizes. Book today!"
         canonical="/sponsorship"
+        image={photos[0]?.url?.startsWith('http') ? photos[0].url : undefined}
+        jsonLd={jsonLd}
       />
 
-      {/* ══════════════════════════════════════════
-          1. HERO SECTION
-          ══════════════════════════════════════════ */}
-      <section className="relative py-20 overflow-hidden" style={{ backgroundColor: '#1a2332' }}>
-        <div
-          className="absolute inset-0 opacity-10"
-          style={{
-            backgroundImage:
-              'radial-gradient(circle at 20% 50%, #E53935 0%, transparent 50%), radial-gradient(circle at 80% 50%, #FFD700 0%, transparent 50%)',
-          }}
-        />
+      {/* ── 1. HERO ── */}
+      <section className="relative pt-16 pb-10 overflow-hidden" style={{ backgroundColor: '#1a2332' }}>
+        <div className="absolute inset-0 opacity-10"
+          style={{ backgroundImage: 'radial-gradient(circle at 20% 50%, #E53935 0%, transparent 50%), radial-gradient(circle at 80% 50%, #FFD700 0%, transparent 50%)' }} />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <motion.div
-            className="text-center"
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-          >
-            <div
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6"
-              style={{
-                backgroundColor: 'rgba(255,215,0,0.15)',
-                border: '1px solid rgba(255,215,0,0.4)',
-              }}
-            >
+          <motion.div className="text-center"
+            initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6"
+              style={{ backgroundColor: 'rgba(255,215,0,0.15)', border: '1px solid rgba(255,215,0,0.4)' }}>
               <Star className="w-4 h-4" style={{ color: '#FFD700' }} />
-              <span
-                className="text-sm font-bold uppercase tracking-widest"
-                style={{ color: '#FFD700', fontFamily: 'Open Sans, sans-serif' }}
-              >
-                Brand Partnership Opportunities
+              <span className="text-sm font-bold uppercase tracking-widest"
+                style={{ color: '#FFD700', fontFamily: 'Open Sans, sans-serif' }}>
+                Our most booked attraction
               </span>
             </div>
-            <h1
-              className="text-4xl sm:text-5xl lg:text-6xl mb-6 text-white leading-tight"
-              style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800 }}
-            >
-              Advertise Where <br />
-              <span style={{ color: '#FFD700' }}>Eyes Are Glued</span>
+
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl mb-6 text-white leading-tight"
+              style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800 }}>
+              Human Claw Machine Rental <br />
+              <span style={{ color: '#FFD700' }}>in Lebanon</span>
             </h1>
-            <p
-              className="text-xl text-white/70 max-w-2xl mx-auto mb-8"
-              style={{ fontFamily: 'Open Sans, sans-serif' }}
-            >
-              Place your brand inside the most engaging entertainment experience at any festival,
-              university, or event in Lebanon.
+
+            <p className="text-lg sm:text-xl text-white/80 max-w-3xl mx-auto"
+              style={{ fontFamily: 'Open Sans, sans-serif' }}>
+              A life-sized claw machine where a real person is harnessed in and becomes the claw,
+              lowering down to grab prizes while the crowd watches. We deliver, install and run it
+              anywhere in Lebanon — for brand activations, birthdays and festivals.
             </p>
-            <a href={whatsapp} target="_blank" rel="noopener noreferrer">
-              <button
-                className="px-10 py-4 rounded-xl text-lg font-bold transition-all hover:scale-105 hover:shadow-2xl flex items-center gap-3 mx-auto"
-                style={{
-                  backgroundColor: '#FFD700',
-                  color: '#1a2332',
-                  fontFamily: 'Montserrat, sans-serif',
-                  boxShadow: '0 10px 40px rgba(255,215,0,0.3)',
-                }}
-              >
-                Contact Us for Sponsorship
-                <ArrowRight className="w-5 h-5" />
-              </button>
-            </a>
           </motion.div>
         </div>
       </section>
 
-      {/* ══════════════════════════════════════════
-          2. STATS STRIP
-          ══════════════════════════════════════════ */}
-      <section className="py-10 bg-white border-b border-gray-100">
-        <div className="max-w-5xl mx-auto px-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
-            {STATS.map((s, i) => (
-              <motion.div
-                key={s.label}
-                initial={{ opacity: 0, y: 16 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-              >
-                <p
-                  className="text-3xl sm:text-4xl mb-1"
-                  style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800, color: '#E53935' }}
-                >
-                  {s.value}
-                </p>
-                <p
-                  className="text-sm text-gray-500 font-semibold uppercase tracking-widest"
-                  style={{ fontFamily: 'Open Sans, sans-serif' }}
-                >
-                  {s.label}
-                </p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ══════════════════════════════════════════
-          3. HUMAN CLAW MACHINE SECTION
-          ══════════════════════════════════════════ */}
-      <section className="py-20 bg-white">
+      {/* ── 2. PHOTOS — high on the page, this product sells on being seen ── */}
+      <section className="py-10 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-
-          {/* ── Top: Text + Main Image ── */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center mb-16">
-
-            {/* Left: Description */}
-            <motion.div
-              initial={{ opacity: 0, x: -30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6 }}
-            >
-              <div
-                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-4"
-                style={{
-                  backgroundColor: 'rgba(229,57,53,0.08)',
-                  border: '1px solid rgba(229,57,53,0.25)',
-                }}
-              >
-                <span
-                  className="text-xs font-bold uppercase tracking-widest"
-                  style={{ color: '#E53935', fontFamily: 'Open Sans, sans-serif' }}
-                >
-                  Flagship Opportunity
-                </span>
-              </div>
-              <h2
-                className="text-3xl sm:text-4xl lg:text-5xl mb-6"
-                style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800, color: '#1a2332' }}
-              >
-                The Human <br />
-                <span style={{ color: '#E53935' }}>Claw Machine</span>
-              </h2>
-              <p
-                className="text-lg text-gray-600 mb-6 leading-relaxed"
-                style={{ fontFamily: 'Open Sans, sans-serif' }}
-              >
-                Our most viral attraction. A life-sized claw machine where a real person is strapped
-                inside — they become the claw, grabbing prizes for the crowd.{' '}
-                <strong>Every second of this experience is photographed, filmed, and shared.</strong>
-              </p>
-              <div className="space-y-4 mb-8">
-                {[
-                  'Your logo printed across the entire machine exterior',
-                  'Branded merchandise as prizes inside the machine',
-                  'Host-announced brand mentions every round',
-                  'Dedicated social media content with your hashtag',
-                ].map((item, i) => (
-                  <div key={i} className="flex items-start gap-3">
-                    <div
-                      className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
-                      style={{ backgroundColor: '#FFD700' }}
-                    >
-                      <span className="text-xs font-black" style={{ color: '#1a2332' }}>✓</span>
-                    </div>
-                    <p className="text-gray-600" style={{ fontFamily: 'Open Sans, sans-serif' }}>
-                      {item}
-                    </p>
-                  </div>
+          {galleryLoading ? (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+              {[0, 1, 2, 3, 4].map((i) => (
+                <div key={i} className="rounded-xl animate-pulse bg-gray-200" style={{ aspectRatio: '4/3' }} />
+              ))}
+            </div>
+          ) : (
+            <>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+                {photos.map((photo, index) => (
+                  <motion.button
+                    key={photo.url}
+                    type="button"
+                    className={`relative rounded-xl overflow-hidden shadow-md group ${index === 0 ? 'col-span-2 row-span-2 md:col-span-1 md:row-span-1' : ''}`}
+                    style={{ aspectRatio: '4/3' }}
+                    onClick={() => openLightbox(index)}
+                    initial={{ opacity: 0, y: 16 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: index * 0.06, duration: 0.4 }}
+                    whileHover={{ scale: 1.03 }}
+                    aria-label={`View photo: ${photo.alt}`}
+                  >
+                    <ImageWithFallback
+                      src={photo.url}
+                      alt={photo.alt}
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                    />
+                  </motion.button>
                 ))}
               </div>
-              <a href={whatsapp} target="_blank" rel="noopener noreferrer">
-                <button
-                  className="px-8 py-4 rounded-xl font-bold text-white transition-all hover:scale-105 hover:shadow-xl flex items-center gap-2"
-                  style={{
-                    backgroundColor: '#E53935',
-                    fontFamily: 'Montserrat, sans-serif',
-                    boxShadow: '0 8px 24px rgba(229,57,53,0.3)',
-                  }}
-                >
-                  Contact us for sponsorship opportunities
-                  <ArrowRight className="w-5 h-5" />
-                </button>
-              </a>
-            </motion.div>
-
-            {/* Right: Main hero image from gallery */}
-            <motion.div
-              initial={{ opacity: 0, x: 30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6 }}
-            >
-              {galleryLoading ? (
-                /* Loading skeleton */
-                <div
-                  className="w-full rounded-2xl animate-pulse"
-                  style={{ aspectRatio: '4/3', backgroundColor: '#e5e7eb' }}
-                />
-              ) : mainImage ? (
-                /* Main gallery image — clickable to open lightbox */
-                <div
-                  className="relative rounded-2xl overflow-hidden shadow-2xl cursor-pointer group"
-                  style={{ aspectRatio: '4/3' }}
-                  onClick={() => openLightbox(gallery.indexOf(mainImage))}
-                  role="button"
-                  aria-label="View full image"
-                >
-                  <ImageWithFallback
-                    src={mainImage.image_url}
-                    alt={mainImage.description || 'Human Claw Machine'}
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                  />
-                  {/* Hover overlay */}
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 flex items-center justify-center">
-                    <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-white/90 text-[#1a2332] text-xs font-bold uppercase tracking-widest px-4 py-2 rounded-full">
-                      View Full Image
-                    </span>
-                  </div>
-                  {/* Description overlay at bottom */}
-                  {mainImage.description && (
-                    <div
-                      className="absolute bottom-0 left-0 right-0 p-4"
-                      style={{
-                        background: 'linear-gradient(to top, rgba(26,35,50,0.85), transparent)',
-                      }}
-                    >
-                      <p
-                        className="text-white text-sm leading-snug"
-                        style={{ fontFamily: 'Open Sans, sans-serif' }}
-                      >
-                        {mainImage.description}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              ) : null}
-            </motion.div>
-          </div>
-
-          {/* ── Bottom: Thumbnail gallery ── */}
-          {!galleryLoading && thumbnails.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5 }}
-            >
-              <h3
-                className="text-lg font-bold mb-5 text-center"
-                style={{ fontFamily: 'Montserrat, sans-serif', color: '#1a2332' }}
-              >
-                More from the Human Claw Machine
-              </h3>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                {thumbnails.map((img) => {
-                  const globalIndex = gallery.indexOf(img);
-                  return (
-                    <motion.div
-                      key={img.id}
-                      className="relative rounded-xl overflow-hidden cursor-pointer group shadow-md"
-                      style={{ aspectRatio: '1/1' }}
-                      onClick={() => openLightbox(globalIndex)}
-                      whileHover={{ scale: 1.03 }}
-                      transition={{ duration: 0.2 }}
-                      role="button"
-                      aria-label={img.description || 'Gallery image'}
-                    >
-                      <ImageWithFallback
-                        src={img.image_url}
-                        alt={img.description || 'Gallery image'}
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                      />
-                      {/* Hover overlay with description */}
-                      <div
-                        className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-2"
-                        style={{
-                          background: 'linear-gradient(to top, rgba(26,35,50,0.9), transparent)',
-                        }}
-                      >
-                        {img.description && (
-                          <p
-                            className="text-white text-[10px] leading-tight line-clamp-3"
-                            style={{ fontFamily: 'Open Sans, sans-serif' }}
-                          >
-                            {img.description}
-                          </p>
-                        )}
-                      </div>
-                    </motion.div>
-                  );
-                })}
-              </div>
-              <p
-                className="text-gray-400 text-center text-xs mt-4"
-                style={{ fontFamily: 'Open Sans, sans-serif' }}
-              >
-                Click any image to view full size · Gallery managed via Admin Panel
-              </p>
-            </motion.div>
+              {gallery.length === 0 && (
+                <p className="text-gray-400 text-center text-xs mt-4" style={{ fontFamily: 'Open Sans, sans-serif' }}>
+                  Placeholder images — upload the real photos from the admin panel to replace them.
+                </p>
+              )}
+            </>
           )}
+
+          <div className="text-center mt-8">
+            <a href={WHATSAPP} target="_blank" rel="noopener noreferrer">
+              <button className="px-10 py-4 rounded-xl text-lg font-bold transition-all hover:scale-105 hover:shadow-2xl inline-flex items-center gap-3"
+                style={{ backgroundColor: '#FFD700', color: '#1a2332', fontFamily: 'Montserrat, sans-serif', boxShadow: '0 10px 40px rgba(255,215,0,0.3)' }}>
+                Book the Human Claw Machine
+                <ArrowRight className="w-5 h-5" />
+              </button>
+            </a>
+          </div>
         </div>
       </section>
 
-      {/* ══════════════════════════════════════════
-          4. OPPORTUNITIES GRID
-          ══════════════════════════════════════════ */}
+      {/* ── 3. WHERE IT GETS BOOKED ── */}
       <section className="py-20" style={{ backgroundColor: '#f8f9fa' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-14">
-            <h2
-              className="text-3xl sm:text-4xl mb-4"
-              style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800, color: '#1a2332' }}
-            >
-              What Your Sponsorship Gets You
+            <h2 className="text-3xl sm:text-4xl mb-4"
+              style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800, color: '#1a2332' }}>
+              Where the Human Claw Machine Gets Booked
             </h2>
-            <p
-              className="text-lg text-gray-500 max-w-2xl mx-auto"
-              style={{ fontFamily: 'Open Sans, sans-serif' }}
-            >
-              We make sure every sponsorship dollar translates into real audience engagement — not
-              just a logo on a banner.
+            <p className="text-lg text-gray-500 max-w-2xl mx-auto" style={{ fontFamily: 'Open Sans, sans-serif' }}>
+              One machine, three very different jobs — and it travels to every part of Lebanon,
+              not only the main cities.
             </p>
           </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {USE_CASES.map((item, i) => {
+              const Icon = item.icon;
+              return (
+                <motion.div key={item.title}
+                  className="bg-white rounded-2xl p-8 shadow-lg border border-gray-100"
+                  initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }} transition={{ delay: i * 0.1, duration: 0.5 }}>
+                  <div className="w-14 h-14 rounded-full flex items-center justify-center mb-5" style={{ backgroundColor: '#E53935' }}>
+                    <Icon className="w-7 h-7 text-white" />
+                  </div>
+                  <h3 className="text-xl mb-3" style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 700, color: '#1a2332' }}>
+                    {item.title}
+                  </h3>
+                  <p className="text-gray-600 leading-relaxed" style={{ fontFamily: 'Open Sans, sans-serif' }}>
+                    {item.body}
+                  </p>
+                </motion.div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* ── 4. SPONSORSHIP — one section, not the whole page ── */}
+      <section className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-14">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-4"
+              style={{ backgroundColor: 'rgba(229,57,53,0.08)', border: '1px solid rgba(229,57,53,0.25)' }}>
+              <span className="text-xs font-bold uppercase tracking-widest"
+                style={{ color: '#E53935', fontFamily: 'Open Sans, sans-serif' }}>
+                For brands
+              </span>
+            </div>
+            <h2 className="text-3xl sm:text-4xl mb-4"
+              style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800, color: '#1a2332' }}>
+              Sponsor the Machine, Not a Banner
+            </h2>
+            <p className="text-lg text-gray-500 max-w-2xl mx-auto" style={{ fontFamily: 'Open Sans, sans-serif' }}>
+              A banner gets glanced at. The human claw machine gets queued for, played and filmed.
+            </p>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {OPPORTUNITIES.map((op, i) => {
               const Icon = op.icon;
               return (
-                <motion.div
-                  key={op.title}
+                <motion.div key={op.title}
                   className="p-8 rounded-2xl bg-white border-2 hover:shadow-2xl transition-all duration-300"
                   style={{ borderColor: op.color }}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.1, duration: 0.5 }}
-                  whileHover={{ y: -6 }}
-                >
-                  <div
-                    className="w-14 h-14 rounded-full flex items-center justify-center mb-5"
-                    style={{ backgroundColor: op.color }}
-                  >
-                    <Icon
-                      className="w-7 h-7"
-                      style={{ color: op.color === '#FFD700' ? '#1a2332' : 'white' }}
-                    />
+                  initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }} transition={{ delay: i * 0.1, duration: 0.5 }}
+                  whileHover={{ y: -6 }}>
+                  <div className="w-14 h-14 rounded-full flex items-center justify-center mb-5" style={{ backgroundColor: op.color }}>
+                    <Icon className="w-7 h-7" style={{ color: op.color === '#FFD700' ? '#1a2332' : 'white' }} />
                   </div>
-                  <h3
-                    className="text-xl mb-3"
-                    style={{
-                      fontFamily: 'Montserrat, sans-serif',
-                      fontWeight: 700,
-                      color: '#1a2332',
-                    }}
-                  >
+                  <h3 className="text-xl mb-3" style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 700, color: '#1a2332' }}>
                     {op.title}
                   </h3>
-                  <p
-                    className="text-gray-500 leading-relaxed"
-                    style={{ fontFamily: 'Open Sans, sans-serif' }}
-                  >
+                  <p className="text-gray-500 leading-relaxed" style={{ fontFamily: 'Open Sans, sans-serif' }}>
                     {op.description}
                   </p>
                 </motion.div>
@@ -615,51 +417,31 @@ export function Sponsorship() {
         </div>
       </section>
 
-      {/* ══════════════════════════════════════════
-          5. LEAD CTA
-          ══════════════════════════════════════════ */}
+      {/* ── 5. CTA ── */}
       <section className="py-20" style={{ backgroundColor: '#1a2332' }}>
         <div className="max-w-4xl mx-auto px-4 text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-          >
-            <Heart className="w-12 h-12 mx-auto mb-6" style={{ color: '#FFD700' }} />
-            <h2
-              className="text-3xl sm:text-4xl mb-4 text-white"
-              style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800 }}
-            >
-              Ready to Put Your Brand in the Spotlight?
+          <motion.div initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }} transition={{ duration: 0.6 }}>
+            <h2 className="text-3xl sm:text-4xl mb-4 text-white"
+              style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800 }}>
+              Tell Us the Date and the Venue
             </h2>
-            <p
-              className="text-xl text-white/70 mb-8 max-w-xl mx-auto"
-              style={{ fontFamily: 'Open Sans, sans-serif' }}
-            >
-              We'll tailor a sponsorship package to your goals, audience, and budget. No commitment
-              — just a conversation.
+            <p className="text-xl text-white/70 mb-8 max-w-xl mx-auto" style={{ fontFamily: 'Open Sans, sans-serif' }}>
+              Send us your event details on WhatsApp and we will come back with what it takes to
+              bring the human claw machine to you — anywhere in Lebanon.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <a href={whatsapp} target="_blank" rel="noopener noreferrer">
-                <button
-                  className="px-10 py-4 rounded-xl text-lg font-bold transition-all hover:scale-105 hover:shadow-2xl flex items-center gap-3"
-                  style={{
-                    backgroundColor: '#FFD700',
-                    color: '#1a2332',
-                    fontFamily: 'Montserrat, sans-serif',
-                  }}
-                >
-                  Contact us for sponsorship opportunities
+              <a href={WHATSAPP} target="_blank" rel="noopener noreferrer">
+                <button className="px-10 py-4 rounded-xl text-lg font-bold transition-all hover:scale-105 hover:shadow-2xl flex items-center gap-3"
+                  style={{ backgroundColor: '#FFD700', color: '#1a2332', fontFamily: 'Montserrat, sans-serif' }}>
+                  Book on WhatsApp
                   <ArrowRight className="w-5 h-5" />
                 </button>
               </a>
-              <Link to="/services">
-                <button
-                  className="px-10 py-4 rounded-xl text-lg font-bold border-2 border-white/30 text-white transition-all hover:border-white hover:scale-105 flex items-center gap-3"
-                  style={{ fontFamily: 'Montserrat, sans-serif' }}
-                >
-                  View Our Services
+              <Link to="/catalog">
+                <button className="px-10 py-4 rounded-xl text-lg font-bold border-2 border-white/30 text-white transition-all hover:border-white hover:scale-105"
+                  style={{ fontFamily: 'Montserrat, sans-serif' }}>
+                  See the Rest of Our Games
                 </button>
               </Link>
             </div>
@@ -667,14 +449,11 @@ export function Sponsorship() {
         </div>
       </section>
 
-      {/* ══════════════════════════════════════════
-          LIGHTBOX OVERLAY
-          ══════════════════════════════════════════ */}
-      {lightboxOpen && gallery.length > 0 && (
+      {lightboxOpen && photos.length > 0 && (
         <Lightbox
-          images={gallery}
+          images={photos}
           currentIndex={lightboxIndex}
-          onClose={closeLightbox}
+          onClose={() => setLightboxOpen(false)}
           onPrev={prevImage}
           onNext={nextImage}
         />
