@@ -46,6 +46,7 @@ const LocationCard = ({ loc, onDelete, onEdit }) => (
 const Locations = () => {
   const [locations, setLocations] = useState([]);
   const [showForm, setShowForm] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [editingLoc, setEditingLoc] = useState(null);
   const [form, setForm] = useState({ name: '', image_url: '' });
 
@@ -59,14 +60,20 @@ const Locations = () => {
       .catch(err => console.error('Locations fetch error'));
   };
 
-  const handleImageUpload = (e) => {
+  const handleImageUpload = async (e) => {
     const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setForm({...form, image_url: reader.result});
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+    setUploading(true);
+    try {
+      const data = new FormData();
+      data.append('image', file);
+      const res = await axios.post(`${API}/upload`, data);
+      setForm((prev) => ({ ...prev, image_url: res.data.url }));
+    } catch (err) {
+      alert(err?.response?.data?.error || 'Upload failed. Please try again.');
+      e.target.value = '';
+    } finally {
+      setUploading(false);
     }
   };
 

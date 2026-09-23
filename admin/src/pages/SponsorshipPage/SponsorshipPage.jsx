@@ -123,6 +123,7 @@ const SponsorshipGallery = () => {
   const [showForm, setShowForm] = useState(false);
   const [editingImg, setEditingImg] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
   /** Form fields */
   const [form, setForm] = useState({
@@ -151,15 +152,22 @@ const SponsorshipGallery = () => {
       });
   };
 
-  // ── FILE UPLOAD (base64) ──
-  const handleFileUpload = (e) => {
+  // ── FILE UPLOAD (to ImageKit, stores the returned URL) ──
+  const handleFileUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setForm((prev) => ({ ...prev, image_url: reader.result }));
-    };
-    reader.readAsDataURL(file);
+    setUploading(true);
+    try {
+      const data = new FormData();
+      data.append('image', file);
+      const res = await axios.post(`${API}/upload`, data);
+      setForm((prev) => ({ ...prev, image_url: res.data.url }));
+    } catch (err) {
+      alert(err?.response?.data?.error || 'Upload failed. Please try again.');
+      e.target.value = '';
+    } finally {
+      setUploading(false);
+    }
   };
 
   // ── FORM SUBMIT (Add / Edit) ──

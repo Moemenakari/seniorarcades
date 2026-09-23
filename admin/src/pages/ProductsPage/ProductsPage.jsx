@@ -113,6 +113,8 @@ const Products = () => {
   const [games, setGames] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [editingGame, setEditingGame] = useState(null);
+  const [uploadingSlot, setUploadingSlot] = useState(null);
+  const [uploadError, setUploadError] = useState('');
   
   // ── STATE MANAGEMENT: FORM DATA ──
   const [form, setForm] = useState({
@@ -134,16 +136,31 @@ const Products = () => {
   };
 
   // ── IMAGE & FORM HANDLERS ──
-  const handleImageUpload = (e, index) => {
+  const FIELD_BY_SLOT = { 1: 'image_url', 2: 'image_url2', 3: 'image_url3' };
+
+  /**
+   * Sends the file to ImageKit and stores the returned URL.
+   * Images used to be read as base64 and saved into the products table,
+   * which put ~300 KB of text in every row and in every catalog response.
+   */
+  const handleImageUpload = async (e, slot) => {
     const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        if (index === 1) setForm({...form, image_url: reader.result});
-        else if (index === 2) setForm({...form, image_url2: reader.result});
-        else if (index === 3) setForm({...form, image_url3: reader.result});
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+
+    const field = FIELD_BY_SLOT[slot];
+    setUploadingSlot(slot);
+    setUploadError('');
+
+    try {
+      const data = new FormData();
+      data.append('image', file);
+      const res = await axios.post(`${API}/upload`, data);
+      setForm((prev) => ({ ...prev, [field]: res.data.url }));
+    } catch (err) {
+      setUploadError(err?.response?.data?.error || 'Upload failed. Check your connection and try again.');
+      e.target.value = '';
+    } finally {
+      setUploadingSlot(null);
     }
   };
 
@@ -321,13 +338,22 @@ const Products = () => {
               <label className="text-sm font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-2">
                  <Camera className="w-3 h-3 text-slate-400" /> Upload Machine Images (Up to 3)
               </label>
+              {uploadError && (
+                 <p className="text-sm font-bold text-red-600 bg-red-50 border border-red-100 rounded-xl px-4 py-3">
+                    {uploadError}
+                 </p>
+              )}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                  {[1, 2, 3].map((num) => {
                    const imgUrl = num === 1 ? form.image_url : num === 2 ? form.image_url2 : form.image_url3;
+                   const busy = uploadingSlot === num;
                    return (
                      <div key={num} className="flex flex-col gap-2">
-                        <input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, num)} className="block w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-black file:uppercase file:tracking-widest file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition-colors cursor-pointer" />
-                        {imgUrl && (
+                        <input type="file" accept="image/*" disabled={busy} onChange={(e) => handleImageUpload(e, num)} className="block w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-black file:uppercase file:tracking-widest file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition-colors cursor-pointer disabled:opacity-50" />
+                        {busy && (
+                           <p className="text-xs font-black uppercase tracking-widest text-blue-600">Uploading…</p>
+                        )}
+                        {imgUrl && !busy && (
                            <div className="h-32 rounded-xl overflow-hidden shadow-sm border border-slate-100">
                               <img src={imgUrl} alt={`Preview ${num}`} className="w-full h-full object-cover" />
                            </div>
