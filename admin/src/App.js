@@ -86,9 +86,9 @@ function LoginScreen({ onLogin }) {
           </div>
           <form onSubmit={handleLogin} className="space-y-6">
              <div className="space-y-2 text-left">
-                <label className="text-sm font-black text-slate-500 uppercase tracking-widest leading-none ml-1">Phone</label>
+                <label className="text-sm font-black text-slate-500 uppercase tracking-widest leading-none ml-1">Username</label>
                 <input
-                  type="tel"
+                  type="text"
                   autoComplete="username"
                   className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-6 py-4 outline-none focus:border-navy font-bold text-slate-800 transition-all"
                   onChange={e => setCreds({...creds, phone: e.target.value})}

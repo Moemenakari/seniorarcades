@@ -34,9 +34,22 @@ node scripts/create-admin.js      # prompts for name, phone, role, password
 | `super` | Everything, including starting a new financial cycle and resetting data |
 | `admin` | Everything except the owner-only actions above |
 
-Sign in at the admin panel with the phone number and password you set. The panel
+Sign in at the admin panel with the username and password you set. The panel
 sends the JWT as `Authorization: Bearer <token>`; every admin route verifies the
 signature and the role server-side.
+
+### Forgot the admin password?
+
+You cannot lock yourself out. Run the same script with the **same username** and
+it updates that account's password instead of creating a second one:
+
+```bash
+cd backend
+node scripts/create-admin.js
+```
+
+Enter the existing username, pick a new password, done. Passwords are stored as
+bcrypt hashes — nobody, including this repository, can read the old one back.
 
 ---
 
