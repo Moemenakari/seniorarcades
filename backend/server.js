@@ -29,6 +29,7 @@ const ratingRoutes = require('./routes/rating.routes');
 const sponsorshipRoutes = require('./routes/sponsorship.routes');
 const uploadRoutes = require('./routes/upload.routes');
 const { adminProtect, superProtect } = require('./middleware/admin.middleware');
+const { logAction } = require('./utils/logger');
 
 app.use('/api/events', adminProtect, eventRoutes);
 app.use('/api/finances', adminProtect, financeRoutes);
@@ -119,6 +120,34 @@ app.put('/api/settings/cycle', superProtect, async (req, res) => {
     res.json({ success: true, start_date });
   } catch (err) {
     res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * Rebuilds the public site.
+ *
+ * The marketing pages are pre-rendered during the build, so a game added
+ * here is visible to visitors immediately but not to Google or ChatGPT
+ * until the site is built again. This triggers that build.
+ */
+app.post('/api/admin/rebuild-site', adminProtect, async (req, res) => {
+  const hook = require('./config/env').VERCEL_DEPLOY_HOOK_URL;
+  if (!hook) {
+    return res.status(503).json({
+      error: 'Publishing is not set up yet. Add VERCEL_DEPLOY_HOOK_URL in Render.',
+    });
+  }
+
+  try {
+    const response = await fetch(hook, { method: 'POST' });
+    if (!response.ok) throw new Error(`Vercel answered ${response.status}`);
+
+    logAction(req.adminName, 'Website', 'Site Rebuild', 'Published latest changes',
+      'Triggered a rebuild so the public pages pick up the current catalog.', 0, 'Website');
+
+    res.json({ success: true, message: 'Publishing started. The site updates in a few minutes.' });
+  } catch (err) {
+    res.status(502).json({ error: `Could not start publishing: ${err.message}` });
   }
 });
 

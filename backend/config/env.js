@@ -35,4 +35,10 @@ module.exports = {
   IMAGEKIT_PUBLIC_KEY: process.env.IMAGEKIT_PUBLIC_KEY,
   IMAGEKIT_PRIVATE_KEY: process.env.IMAGEKIT_PRIVATE_KEY,
   IMAGEKIT_URL_ENDPOINT: process.env.IMAGEKIT_URL_ENDPOINT,
+
+  // Optional. Vercel deploy hook used by the "publish" button in the admin.
+  // Pages are pre-rendered at build time, so catalog changes only reach
+  // search engines after a rebuild. Without this the button reports that
+  // the feature is not configured; nothing else is affected.
+  VERCEL_DEPLOY_HOOK_URL: process.env.VERCEL_DEPLOY_HOOK_URL || '',
 };

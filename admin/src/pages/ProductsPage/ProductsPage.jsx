@@ -21,7 +21,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Plus, Edit, Eye, Trash2, Camera, Zap, Maximize, Coins, Info, 
-  Gamepad2, Search, CheckCircle2, XCircle, X, MapPin, Star
+  Gamepad2, Search, CheckCircle2, XCircle, X, MapPin, Star, Globe
 } from 'lucide-react';
 import axios from 'axios';
 import { API_BASE_URL as API } from '../../config';
@@ -115,6 +115,25 @@ const Products = () => {
   const [editingGame, setEditingGame] = useState(null);
   const [uploadingSlot, setUploadingSlot] = useState(null);
   const [uploadError, setUploadError] = useState('');
+  const [publishing, setPublishing] = useState(false);
+  const [publishMessage, setPublishMessage] = useState(null);
+
+  /**
+   * The public pages are pre-rendered at build time, so games added here
+   * reach visitors at once but reach Google and ChatGPT only after a rebuild.
+   */
+  const handlePublish = async () => {
+    setPublishing(true);
+    setPublishMessage(null);
+    try {
+      const res = await axios.post(`${API}/admin/rebuild-site`);
+      setPublishMessage({ ok: true, text: res.data.message || 'Publishing started.' });
+    } catch (err) {
+      setPublishMessage({ ok: false, text: err?.response?.data?.error || 'Could not start publishing.' });
+    } finally {
+      setPublishing(false);
+    }
+  };
   
   // ── STATE MANAGEMENT: FORM DATA ──
   const [form, setForm] = useState({
@@ -263,10 +282,27 @@ const Products = () => {
              {games.filter(g => g.is_featured).length}/9 Featured on Website Homepage
            </p>
         </div>
-        <button onClick={() => { setEditingGame(null); resetForm(); setShowForm(true); }} className="btn-navy group flex items-center gap-2 sm:gap-3 w-full sm:w-auto justify-center">
-           <Plus className="w-4 h-4 sm:w-5 sm:h-5 group-hover:rotate-90 transition-transform" /> New Machine
-        </button>
+        <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+          <button
+            onClick={handlePublish}
+            disabled={publishing}
+            title="Rebuild the public site so Google and ChatGPT see the current games"
+            className="group flex items-center gap-2 justify-center px-5 py-3 rounded-2xl border-2 border-slate-200 text-slate-600 font-black uppercase tracking-widest text-sm hover:border-[#1e3a8a] hover:text-[#1e3a8a] transition-all disabled:opacity-50"
+          >
+            <Globe className={`w-4 h-4 ${publishing ? 'animate-spin' : ''}`} />
+            {publishing ? 'Publishing…' : 'Publish to Google'}
+          </button>
+          <button onClick={() => { setEditingGame(null); resetForm(); setShowForm(true); }} className="btn-navy group flex items-center gap-2 sm:gap-3 w-full sm:w-auto justify-center">
+             <Plus className="w-4 h-4 sm:w-5 sm:h-5 group-hover:rotate-90 transition-transform" /> New Machine
+          </button>
+        </div>
       </div>
+
+      {publishMessage && (
+        <div className={`mb-6 rounded-2xl px-5 py-4 text-sm font-bold border ${publishMessage.ok ? 'bg-green-50 border-green-200 text-green-700' : 'bg-red-50 border-red-200 text-red-700'}`}>
+          {publishMessage.text}
+        </div>
+      )}
 
       {/* =============================
           2. ADD/EDIT FORM MODAL
