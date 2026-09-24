@@ -18,6 +18,15 @@ import { Sponsorship } from '../pages/SponsorshipPage/SponsorshipPage';
 import { BuildYourEvent } from '../pages/BuildEventPage/BuildEventPage';
 import { ProductDetails } from '../pages/ProductDetailsPage/ProductDetailsPage';
 import { AboutUs } from '../pages/AboutPage/AboutPage';
+import { ArcadeRental } from '../pages/landing/ArcadeRentalPage';
+import { BuyMachines } from '../pages/landing/BuyMachinesPage';
+import { FestivalSupply } from '../pages/landing/FestivalSupplyPage';
+import { RevenueShare } from '../pages/landing/RevenueSharePage';
+import { UniversityEvents } from '../pages/landing/UniversityEventsPage';
+import { SchoolEvents } from '../pages/landing/SchoolEventsPage';
+import { StoreOpenings } from '../pages/landing/StoreOpeningsPage';
+import { BirthdayParties } from '../pages/landing/BirthdayPartiesPage';
+import { NgoEvents } from '../pages/landing/NgoEventsPage';
 
 export default function App() {
   return (
@@ -28,6 +37,17 @@ export default function App() {
           <Route path="/" element={<Home />} />
           <Route path="/catalog" element={<Catalog />} />
           <Route path="/services" element={<Services />} />
+          {/* Service detail pages — one search intent each */}
+          <Route path="/services/arcade-rental" element={<ArcadeRental />} />
+          <Route path="/services/buy-arcade-machines" element={<BuyMachines />} />
+          <Route path="/services/festival-supply" element={<FestivalSupply />} />
+          <Route path="/services/revenue-share" element={<RevenueShare />} />
+          {/* Event-type pages — one audience each */}
+          <Route path="/events/universities" element={<UniversityEvents />} />
+          <Route path="/events/schools" element={<SchoolEvents />} />
+          <Route path="/events/store-openings" element={<StoreOpenings />} />
+          <Route path="/events/birthdays" element={<BirthdayParties />} />
+          <Route path="/events/ngo" element={<NgoEvents />} />
           <Route path="/sponsorship" element={<Sponsorship />} />
           <Route path="/build-your-event" element={<BuildYourEvent />} />
           <Route path="/product/:id" element={<ProductDetails />} />

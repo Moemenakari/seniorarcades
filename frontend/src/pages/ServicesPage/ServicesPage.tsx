@@ -366,7 +366,43 @@ export function Services() {
         </div>
       </section>
 
-      {/* ── 8. CONVERSION CTA ── */}
+      {/* ── 8. DETAIL PAGES ── */}
+      {/* Each link is a page written for one search intent, so the
+          detail lives there and this page stays an overview. */}
+      <section className="py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-10">
+            <h2 className="text-3xl sm:text-4xl mb-3" style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 700, color: '#1a2332' }}>
+              Explore in Detail
+            </h2>
+            <p className="text-lg max-w-2xl mx-auto text-gray-500" style={{ fontFamily: 'Open Sans, sans-serif' }}>
+              Pick the page that matches what you need — each one answers the practical questions for that case.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {[
+              { label: 'Arcade game rental', to: '/services/arcade-rental' },
+              { label: 'Complete festival supply', to: '/services/festival-supply' },
+              { label: 'Buy arcade machines', to: '/services/buy-arcade-machines' },
+              { label: 'Machines for your venue — revenue share', to: '/services/revenue-share' },
+              { label: 'University events', to: '/events/universities' },
+              { label: 'School fun days & fairs', to: '/events/schools' },
+              { label: 'Store openings', to: '/events/store-openings' },
+              { label: 'Birthday parties', to: '/events/birthdays' },
+              { label: 'NGO & association events', to: '/events/ngo' },
+            ].map(link => (
+              <Link key={link.to} to={link.to}
+                className="flex items-center justify-between gap-3 px-6 py-5 rounded-xl border-2 border-gray-100 hover:border-gray-300 transition-colors bg-white"
+                style={{ fontFamily: 'Open Sans, sans-serif', color: '#1a2332' }}>
+                <span className="font-bold">{link.label}</span>
+                <ArrowRight className="w-4 h-4 flex-shrink-0" style={{ color: '#E53935' }} />
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── 9. CONVERSION CTA ── */}
       <section className="py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div className="rounded-2xl p-12 text-center" style={{ backgroundColor: '#E53935' }}

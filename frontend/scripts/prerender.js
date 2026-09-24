@@ -32,6 +32,17 @@ const ROUTES = [
   '/sponsorship',
   '/build-your-event',
   '/about',
+  // Service pages — one search intent each
+  '/services/arcade-rental',
+  '/services/buy-arcade-machines',
+  '/services/festival-supply',
+  '/services/revenue-share',
+  // Event-type pages — one audience each
+  '/events/universities',
+  '/events/schools',
+  '/events/store-openings',
+  '/events/birthdays',
+  '/events/ngo',
 ];
 
 const MIME = {
