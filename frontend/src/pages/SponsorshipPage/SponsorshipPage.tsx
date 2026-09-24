@@ -241,7 +241,7 @@ export function Sponsorship() {
     <div className="bg-white">
       <Seo
         title="Human Claw Machine Rental in Lebanon | Next Level Game"
-        description="Rent the human claw machine in Lebanon for brand activations, store openings, birthdays and festivals. Branded with your logo, filled with your prizes. Book today!"
+        description="Rent the Human Claw Machine in Lebanon for brand activations, store openings, birthdays and festivals. Branded with your logo, filled with your prizes."
         canonical="/sponsorship"
         image={photos[0]?.url?.startsWith('http') ? photos[0].url : undefined}
         jsonLd={jsonLd}

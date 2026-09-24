@@ -24,6 +24,9 @@ const puppeteer = require('puppeteer');
 const BUILD = path.join(__dirname, '..', 'build');
 const PORT = 45678;
 
+/** The build's index.html as react-scripts wrote it, before any pre-rendering. */
+let SHELL;
+
 /** Routes worth pre-rendering: the ones whose text should be indexable. */
 const ROUTES = [
   '/',
@@ -52,13 +55,58 @@ const MIME = {
   '.xml': 'application/xml', '.woff2': 'font/woff2',
 };
 
+const SITE_URL = 'https://nlgarcadesforevents.vercel.app';
+const API_URL = process.env.REACT_APP_API_URL || 'https://nlg-arcade-backend.onrender.com/api';
+
+/**
+ * One route per active game, read from the live API.
+ *
+ * Game pages are where searches like "rent a boxing machine in Lebanon"
+ * land, so they need the same treatment as the marketing pages. The API
+ * sleeps when idle and can take close to a minute to wake, hence the long
+ * timeout and one retry. If it still does not answer, the marketing pages
+ * are built anyway: a missing game page must not block a deploy.
+ */
+async function getProductRoutes() {
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    try {
+      const res = await fetch(`${API_URL}/products`, { signal: AbortSignal.timeout(90_000) });
+      if (!res.ok) throw new Error(`API answered ${res.status}`);
+      const products = await res.json();
+      return products.map(p => `/product/${p.id}`);
+    } catch (err) {
+      console.warn(`  warn  product list attempt ${attempt} failed: ${err.message}`);
+    }
+  }
+  console.warn('  warn  building without game pages');
+  return [];
+}
+
+/** Adds the game pages to build/sitemap.xml; the static routes are already in it. */
+function addToSitemap(routes) {
+  if (routes.length === 0) return;
+  const file = path.join(BUILD, 'sitemap.xml');
+  const today = new Date().toISOString().slice(0, 10);
+  const entries = routes.map(route =>
+    `  <url>\n    <loc>${SITE_URL}${route}</loc>\n    <lastmod>${today}</lastmod>\n` +
+    `    <changefreq>weekly</changefreq>\n    <priority>0.7</priority>\n  </url>\n`
+  ).join('');
+  const xml = fs.readFileSync(file, 'utf8').replace('</urlset>', `${entries}</urlset>`);
+  fs.writeFileSync(file, xml);
+}
+
 /** Minimal static server that falls back to index.html, like Vercel does. */
 function serve() {
   return http.createServer((req, res) => {
     const url = decodeURIComponent(req.url.split('?')[0]);
-    let file = path.join(BUILD, url);
-    if (!fs.existsSync(file) || fs.statSync(file).isDirectory()) {
-      file = path.join(BUILD, 'index.html');
+    const file = path.join(BUILD, url);
+    // Every route gets the untouched shell. Reading build/index.html from
+    // disk here would hand later routes the already pre-rendered home page,
+    // whose head tags then pile up underneath each page's own.
+    if (!fs.existsSync(file) || fs.statSync(file).isDirectory() || file.endsWith('index.html')) {
+      res.writeHead(200, { 'Content-Type': 'text/html' });
+      res.end(SHELL);
+      return;
     }
     res.writeHead(200, { 'Content-Type': MIME[path.extname(file)] || 'application/octet-stream' });
     fs.createReadStream(file).pipe(res);
@@ -71,6 +119,7 @@ function serve() {
     process.exit(1);
   }
 
+  SHELL = fs.readFileSync(path.join(BUILD, 'index.html'));
   const server = serve();
   const browser = await puppeteer.launch({
     headless: 'new',
@@ -80,7 +129,10 @@ function serve() {
   console.log('\nPre-rendering\n');
   let failures = 0;
 
-  for (const route of ROUTES) {
+  const productRoutes = await getProductRoutes();
+  const renderedProducts = [];
+
+  for (const route of [...ROUTES, ...productRoutes]) {
     const page = await browser.newPage();
     try {
       await page.goto(`http://localhost:${PORT}${route}`, {
@@ -92,12 +144,10 @@ function serve() {
       // painted by then, so a missing product list must not fail the build.
       await page.waitForSelector('#root > *', { timeout: 15_000 }).catch(() => {});
 
-      let html = await page.content();
-
-      // react-helmet-async marks the tags it manages. Those attributes are
-      // only meaningful at runtime and confuse nothing, but stripping them
-      // keeps the served HTML clean.
-      html = html.replace(/ data-rh="true"/g, '');
+      // Keep react-helmet-async's data-rh markers. They are how Helmet
+      // recognises these tags after hydration and replaces them; without
+      // them the browser (and Google's renderer) ends up with two copies.
+      const html = await page.content();
 
       const words = (await page.evaluate(() => document.getElementById('root')?.innerText || '')).trim().split(/\s+/).length;
       const title = await page.title();
@@ -105,6 +155,7 @@ function serve() {
       const dir = route === '/' ? BUILD : path.join(BUILD, route);
       fs.mkdirSync(dir, { recursive: true });
       fs.writeFileSync(path.join(dir, 'index.html'), html);
+      if (route.startsWith('/product/')) renderedProducts.push(route);
 
       console.log(`  ok    ${route.padEnd(20)} ${String(words).padStart(5)} words  |  ${title.slice(0, 52)}`);
     } catch (err) {
@@ -117,6 +168,9 @@ function serve() {
 
   await browser.close();
   server.close();
+
+  // Only pages that actually rendered go into the sitemap.
+  addToSitemap(renderedProducts);
 
   if (failures) {
     console.error(`\n${failures} route(s) failed to pre-render.\n`);

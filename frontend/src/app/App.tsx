@@ -27,6 +27,7 @@ import { SchoolEvents } from '../pages/landing/SchoolEventsPage';
 import { StoreOpenings } from '../pages/landing/StoreOpeningsPage';
 import { BirthdayParties } from '../pages/landing/BirthdayPartiesPage';
 import { NgoEvents } from '../pages/landing/NgoEventsPage';
+import { NotFound } from '../pages/NotFoundPage/NotFoundPage';
 
 export default function App() {
   return (
@@ -52,6 +53,7 @@ export default function App() {
           <Route path="/build-your-event" element={<BuildYourEvent />} />
           <Route path="/product/:id" element={<ProductDetails />} />
           <Route path="/about" element={<AboutUs />} />
+          <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>
     </Router>

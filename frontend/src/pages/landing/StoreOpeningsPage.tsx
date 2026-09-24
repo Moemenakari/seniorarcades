@@ -36,7 +36,7 @@ export function StoreOpenings() {
       h1="Games for Store Openings in Lebanon"
       lead="An opening only works if people stop. Next Level Game has supplied games for store openings in Beirut and Tripoli and for many shops elsewhere in Lebanon, using machines that pull a crowd off the street and keep it in front of your door."
       title="Store Opening Games in Lebanon | Next Level Game"
-      description="Draw a crowd to your store opening in Lebanon with arcade and carnival games. Used at openings in Beirut and Tripoli. Delivery, setup and staff. WhatsApp 03 919 876."
+      description="Draw a crowd to your store opening with arcade and carnival games, as we have for openings in Beirut and Tripoli. Delivery, setup and staff included."
       canonical="/events/store-openings"
       breadcrumb={[
         { label: 'Events', to: '/events/store-openings' },

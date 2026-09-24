@@ -136,7 +136,12 @@ export function ProductDetails() {
 
   const productJsonLd = useMemo(() => {
     if (!product) return undefined;
-    const price = product.price?.min ?? product.min_price ?? product.average_price;
+    // Postgres NUMERIC arrives as a string ("70"), so parse before use.
+    // A price of 0 is the column default, not a real price — emitting it
+    // would make Google show the game as free, so it counts as missing.
+    const low = Number(product.price?.min ?? product.min_price);
+    const high = Number(product.price?.max ?? product.max_price);
+    const hasPrice = low > 0;
     return {
       '@context': 'https://schema.org',
       '@type': 'Product',
@@ -144,16 +149,29 @@ export function ProductDetails() {
       description: product.description || `${product.name} available for rent in Lebanon.`,
       category: product.category,
       image: images.length ? images : undefined,
-      offers: {
-        '@type': 'Offer',
-        priceCurrency: 'USD',
-        ...(typeof price === 'number' ? { price } : {}),
-        availability:
-          product.availability === 'available' || product.status === 'active'
-            ? 'https://schema.org/InStock'
-            : 'https://schema.org/OutOfStock',
-        areaServed: 'LB',
-      },
+      ...(hasPrice
+        ? {
+            offers: {
+              '@type': 'AggregateOffer',
+              priceCurrency: 'USD',
+              lowPrice: low,
+              highPrice: high >= low ? high : low,
+              // The range is a daily rental rate, not a purchase price.
+              priceSpecification: {
+                '@type': 'UnitPriceSpecification',
+                priceCurrency: 'USD',
+                minPrice: low,
+                maxPrice: high >= low ? high : low,
+                unitText: 'day',
+              },
+              availability:
+                product.availability === 'available' || product.status === 'active'
+                  ? 'https://schema.org/InStock'
+                  : 'https://schema.org/OutOfStock',
+              areaServed: 'LB',
+            },
+          }
+        : {}),
       ...(ratings.length > 0
         ? {
             aggregateRating: {

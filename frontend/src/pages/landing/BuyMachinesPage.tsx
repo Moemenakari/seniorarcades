@@ -52,7 +52,7 @@ export function BuyMachines() {
       h1="Buy Arcade Machines in Lebanon"
       lead="Next Level Game sells arcade and carnival game machines in Lebanon, including units imported to order from China. If you are opening an arcade, a play area or a games corner inside another business, we can source the machines and deliver them anywhere in the country."
       title="Buy Arcade Machines in Lebanon | Next Level Game"
-      description="Buy arcade and carnival game machines in Lebanon, including imports from China. Sourcing, delivery and installation anywhere in the country. WhatsApp 03 919 876."
+      description="Buy arcade and carnival machines in Lebanon, including imports from China. Sourcing, delivery and installation anywhere in the country. WhatsApp 03 919 876."
       canonical="/services/buy-arcade-machines"
       breadcrumb={[
         { label: 'Services', to: '/services' },

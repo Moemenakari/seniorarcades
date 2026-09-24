@@ -39,7 +39,7 @@ export function NgoEvents() {
       h1="Games for NGO and Association Events in Lebanon"
       lead="We work with NGOs and associations running family days, community events and children activities across Lebanon. The part that matters most for this work is reach: we travel to villages and remote areas that most rental companies will not serve."
       title="Games for NGO Events in Lebanon | Next Level Game"
-      description="Arcade, carnival and inflatable games for NGO and association family days and children activities anywhere in Lebanon, including remote villages. WhatsApp 03 919 876."
+      description="Arcade, carnival and inflatable games for NGO family days and children activities anywhere in Lebanon, including remote villages. WhatsApp 03 919 876."
       canonical="/events/ngo"
       breadcrumb={[
         { label: 'Events', to: '/events/ngo' },

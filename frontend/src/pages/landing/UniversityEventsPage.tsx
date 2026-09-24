@@ -40,7 +40,7 @@ export function UniversityEvents() {
       h1="Arcade Games for University Events in Lebanon"
       lead="Universities are among our most frequent clients. Next Level Game has brought games to campuses including Balamand, BAU, AUB, LIU and USJ, and we handle the delivery, the setup and the staff so the student committee can run the rest of the day."
       title="Arcade Games for University Events in Lebanon"
-      description="Games for university activity days and club fairs in Lebanon. Delivery, setup and staff included. Campuses we have worked with include AUB, LIU, BAU, Balamand and USJ."
+      description="Games for university activity days and club fairs in Lebanon, with delivery, setup and staff. We have worked with AUB, LIU, BAU, Balamand and USJ."
       canonical="/events/universities"
       breadcrumb={[
         { label: 'Events', to: '/events/universities' },
