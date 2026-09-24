@@ -48,7 +48,7 @@ export function NgoEvents() {
       sections={[
         {
           heading: 'We go where the activity is, not where it is convenient',
-          body: 'Community work usually happens away from the main cities, and that is exactly where suppliers refuse to go. We do not. We have set up in mountain villages including Bikaakafra and Hadath El Jebbeh, as well as in Tripoli, Beirut, Jounieh, Batroun and Koura. If your activity is in a village, tell us where it is and we will plan the road and the power supply for it.',
+          body: 'Community work usually happens away from the main cities, and that is exactly where suppliers refuse to go. We do not. We have set up in the mountain village of Bqaakafra and in Aandqet in Akkar, as well as in Tripoli, Beirut, Koura and Chekka. If your activity is in a village, tell us where it is and we will plan the road and the power supply for it.',
         },
         {
           heading: 'Machines that work for a large group of children',
@@ -76,7 +76,7 @@ export function NgoEvents() {
         },
         {
           question: 'Will you travel to a remote village?',
-          answer: 'Yes. We have set up in mountain villages including Bikaakafra and Hadath El Jebbeh, and covering the whole of Lebanon is a deliberate part of how we operate. Tell us the location and we plan the access and the power supply in advance.',
+          answer: 'Yes. We have set up in the mountain village of Bqaakafra and in Aandqet in Akkar, and covering the whole of Lebanon is a deliberate part of how we operate. Tell us the location and we plan the access and the power supply in advance.',
         },
         {
           question: 'Which games handle a large number of children in a few hours?',

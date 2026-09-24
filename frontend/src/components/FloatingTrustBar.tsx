@@ -20,23 +20,28 @@ import { motion, AnimatePresence } from 'framer-motion';
 // =============================
 // DATA CONFIGURATION
 // =============================
+// Only places in the events records and campuses the owner has confirmed.
+// No named NGO or company appears here: a name in this bar reads as an
+// endorsement, so it needs that organisation's actual work behind it.
 const partners = [
-  { name: 'Al Maaref School', type: 'school' },
-  { name: 'Beirut', type: 'location' },
-  { name: 'Lebanese Red Cross', type: 'ngo' },
+  { name: 'AUB', type: 'school' },
   { name: 'Tripoli', type: 'location' },
-  { name: 'Scouts Association', type: 'org' },
-  { name: 'Sidon', type: 'location' },
-  { name: 'Makassed Foundation', type: 'school' },
-  { name: 'Jounieh', type: 'location' },
-  { name: 'UNICEF Lebanon', type: 'ngo' },
-  { name: 'Zahleh', type: 'location' },
-  { name: 'Al Ahliah School', type: 'school' },
-  { name: 'Byblos', type: 'location' },
-  { name: 'Arc en Ciel NGO', type: 'ngo' },
-  { name: 'Baalbek', type: 'location' },
-  { name: 'International College', type: 'school' },
-  { name: 'Tyre', type: 'location' },
+  { name: 'BAU', type: 'school' },
+  { name: 'Beirut', type: 'location' },
+  { name: 'LIU', type: 'school' },
+  { name: 'Koura', type: 'location' },
+  { name: 'USJ', type: 'school' },
+  { name: 'Akkar', type: 'location' },
+  { name: 'NDU', type: 'school' },
+  { name: 'Chekka', type: 'location' },
+  { name: 'Lebanese University', type: 'school' },
+  { name: 'Amioun', type: 'location' },
+  { name: 'University of Balamand', type: 'school' },
+  { name: 'Kousba', type: 'location' },
+  { name: 'Scout Groups', type: 'org' },
+  { name: 'Bqaakafra', type: 'location' },
+  { name: 'NGOs & Associations', type: 'ngo' },
+  { name: 'Kalamoun', type: 'location' },
 ];
 
 // =============================

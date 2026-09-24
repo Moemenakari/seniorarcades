@@ -38,9 +38,9 @@ export function UniversityEvents() {
     <LandingPage
       kicker="University Events"
       h1="Arcade Games for University Events in Lebanon"
-      lead="Universities are among our most frequent clients. Next Level Game has brought games to campuses including Balamand, BAU, AUB, LIU and USJ, and we handle the delivery, the setup and the staff so the student committee can run the rest of the day."
+      lead="Universities are among our most frequent clients. Next Level Game has brought games to campuses including AUB, BAU, LIU, USJ, NDU, the Lebanese University and Balamand, and we handle the delivery, the setup and the staff so the student committee can run the rest of the day."
       title="Arcade Games for University Events in Lebanon"
-      description="Games for university activity days and club fairs in Lebanon, with delivery, setup and staff. We have worked with AUB, LIU, BAU, Balamand and USJ."
+      description="Games for university activity days and club fairs in Lebanon, with delivery, setup and staff. We have worked with AUB, BAU, LIU, USJ, NDU, LU and Balamand."
       canonical="/events/universities"
       breadcrumb={[
         { label: 'Events', to: '/events/universities' },
@@ -49,7 +49,7 @@ export function UniversityEvents() {
       sections={[
         {
           heading: 'Campuses we have worked with',
-          body: 'We have run games at the University of Balamand, Beirut Arab University, the American University of Beirut, the Lebanese International University and Université Saint-Joseph. Working on a campus has its own rules — a delivery window, a security gate, a power point that has to be agreed with facilities — and we plan those with your committee in advance instead of arriving and improvising.',
+          body: 'We have run games at the University of Balamand, Beirut Arab University, the American University of Beirut, the Lebanese International University, Université Saint-Joseph, Notre Dame University and the Lebanese University. Working on a campus has its own rules — a delivery window, a security gate, a power point that has to be agreed with facilities — and we plan those with your committee in advance instead of arriving and improvising.',
         },
         {
           heading: 'What works on a campus',
@@ -74,7 +74,7 @@ export function UniversityEvents() {
       faqs={[
         {
           question: 'Do you supply games for university events in Lebanon?',
-          answer: 'Yes. Next Level Game supplies arcade and carnival games for university activity days, club fairs and campus events, and has worked with campuses including Balamand, BAU, AUB, LIU and USJ. Delivery, installation and on-site staff are included.',
+          answer: 'Yes. Next Level Game supplies arcade and carnival games for university activity days, club fairs and campus events, and has worked with campuses including AUB, BAU, LIU, USJ, NDU, the Lebanese University and Balamand. Delivery, installation and on-site staff are included.',
         },
         {
           question: 'Which games are best for a university activity day?',

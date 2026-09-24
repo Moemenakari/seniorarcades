@@ -77,7 +77,7 @@ export function FestivalSupply() {
         },
         {
           heading: 'Power and access are planned before the day',
-          body: 'This is where outdoor events in Lebanon go wrong. Machines need a power supply that holds for hours, and mountain and village sites often need the load distributed differently from a city venue. We ask about the power source, the ground and the access road in advance, then tell you exactly what is needed. We have set up in Tripoli, Beirut, Jounieh, Batroun and Koura, and in mountain villages including Bikaakafra and Hadath El Jebbeh.',
+          body: 'This is where outdoor events in Lebanon go wrong. Machines need a power supply that holds for hours, and mountain and village sites often need the load distributed differently from a city venue. We ask about the power source, the ground and the access road in advance, then tell you exactly what is needed. We have set up in Tripoli, Beirut, Koura, Chekka and Akkar — including Aandqet — and in the mountain village of Bqaakafra.',
         },
         {
           heading: 'Festivals, fairs and multi-day events',
@@ -99,7 +99,7 @@ export function FestivalSupply() {
         },
         {
           question: 'Can you set up at an outdoor or mountain site?',
-          answer: 'Yes. We have set up at sites across Lebanon, including mountain villages such as Bikaakafra and Hadath El Jebbeh. We plan the access road and the power supply with you before the event date rather than discovering the problem on the day.',
+          answer: 'Yes. We have set up at sites across Lebanon, including the mountain village of Bqaakafra and Aandqet in Akkar. We plan the access road and the power supply with you before the event date rather than discovering the problem on the day.',
         },
         {
           question: 'Who operates the machines during the festival?',

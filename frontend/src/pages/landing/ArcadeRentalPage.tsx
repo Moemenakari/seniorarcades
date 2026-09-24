@@ -74,7 +74,7 @@ export function ArcadeRental() {
         },
         {
           heading: 'We cover the whole of Lebanon, not just the cities',
-          body: 'Most rental companies in Lebanon stop at Beirut and the coast. We do not. Our team has run events in Tripoli, Beirut, Jounieh, Batroun and Koura, and also in mountain villages such as Bikaakafra and Hadath El Jebbeh, where the road and the power supply need planning in advance. If your venue is far from a main road, tell us where it is and we will tell you exactly what we need to get the machines there.',
+          body: 'Most rental companies in Lebanon stop at Beirut and the coast. We do not. Our team has run events in Tripoli, Beirut, Koura, Akkar and Chekka, and in mountain villages such as Bqaakafra, where the road and the power supply need planning in advance. If your venue is far from a main road, tell us where it is and we will tell you exactly what we need to get the machines there.',
         },
         {
           heading: 'What is included in a rental',
@@ -99,7 +99,7 @@ export function ArcadeRental() {
       faqs={[
         {
           question: 'Do you deliver outside Beirut and Tripoli?',
-          answer: 'Yes. We cover the whole of Lebanon, including mountain and remote villages. We have delivered to Batroun, Koura, Jounieh, Bikaakafra and Hadath El Jebbeh. Tell us the exact location and we plan the access and the power supply before the event date.',
+          answer: 'Yes. We cover the whole of Lebanon, including mountain and remote villages. We have delivered to Akkar, Chekka, Koura — including Amioun and Kousba — and the mountain village of Bqaakafra. Tell us the exact location and we plan the access and the power supply before the event date.',
         },
         {
           question: 'How much does it cost to rent an arcade game in Lebanon?',

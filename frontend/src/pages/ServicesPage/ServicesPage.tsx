@@ -395,6 +395,9 @@ export function Services() {
               { label: 'Store openings', to: '/events/store-openings' },
               { label: 'Birthday parties', to: '/events/birthdays' },
               { label: 'NGO & association events', to: '/events/ngo' },
+              { label: 'Tripoli & North Lebanon', to: '/areas/tripoli' },
+              { label: 'Koura', to: '/areas/koura' },
+              { label: 'Beirut', to: '/areas/beirut' },
             ].map(link => (
               <Link key={link.to} to={link.to}
                 className="flex items-center justify-between gap-3 px-6 py-5 rounded-xl border-2 border-gray-100 hover:border-gray-300 transition-colors bg-white"

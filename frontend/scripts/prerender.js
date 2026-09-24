@@ -46,6 +46,10 @@ const ROUTES = [
   '/events/store-openings',
   '/events/birthdays',
   '/events/ngo',
+  // Area pages — only where there is recorded work
+  '/areas/tripoli',
+  '/areas/koura',
+  '/areas/beirut',
 ];
 
 const MIME = {

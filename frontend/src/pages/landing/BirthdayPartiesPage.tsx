@@ -63,7 +63,7 @@ export function BirthdayParties() {
         },
         {
           heading: 'We come to your town',
-          body: 'Parties are not only in Beirut. We deliver across the whole of Lebanon, including Tripoli, Jounieh, Batroun, Koura and mountain towns. If your chalet or village house is off the main road, tell us and we will plan the access in advance.',
+          body: 'Parties are not only in Beirut. We deliver across the whole of Lebanon, including Tripoli, Beirut, Koura, Akkar, Chekka and mountain towns. If your chalet or village house is off the main road, tell us and we will plan the access in advance.',
         },
       ]}
       faqs={[

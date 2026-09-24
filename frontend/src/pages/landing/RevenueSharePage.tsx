@@ -80,7 +80,7 @@ export function RevenueShare() {
         },
         {
           heading: 'Anywhere in Lebanon',
-          body: 'Placement is not limited to Beirut. We operate across the whole country from our base in Tripoli, and we service machines where we place them — including in areas most operators will not travel to. A venue in Batroun, Koura, Jounieh or a mountain town is as workable for us as one in the city.',
+          body: 'Placement is not limited to Beirut. We operate across the whole country from our base in Tripoli, and we service machines where we place them — including in areas most operators will not travel to. A venue in Koura, Akkar, Chekka or a mountain town is as workable for us as one in the city.',
         },
         {
           heading: 'The terms are agreed per venue',
@@ -110,7 +110,7 @@ export function RevenueShare() {
         },
         {
           question: 'Do you place machines outside Beirut?',
-          answer: 'Yes. We work across the whole of Lebanon from our base in Tripoli, including Batroun, Koura, Jounieh and mountain areas, and we service the machines wherever we place them.',
+          answer: 'Yes. We work across the whole of Lebanon from our base in Tripoli, including Koura, Akkar, Chekka and mountain areas, and we service the machines wherever we place them.',
         },
       ]}
       whatsappMessage="Hi, I have a venue and I am interested in a revenue-share partnership. Venue type: , Town: , Available space: "

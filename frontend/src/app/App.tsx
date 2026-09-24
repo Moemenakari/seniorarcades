@@ -27,6 +27,9 @@ import { SchoolEvents } from '../pages/landing/SchoolEventsPage';
 import { StoreOpenings } from '../pages/landing/StoreOpeningsPage';
 import { BirthdayParties } from '../pages/landing/BirthdayPartiesPage';
 import { NgoEvents } from '../pages/landing/NgoEventsPage';
+import { TripoliArea } from '../pages/landing/TripoliAreaPage';
+import { KouraArea } from '../pages/landing/KouraAreaPage';
+import { BeirutArea } from '../pages/landing/BeirutAreaPage';
 import { NotFound } from '../pages/NotFoundPage/NotFoundPage';
 
 export default function App() {
@@ -49,6 +52,10 @@ export default function App() {
           <Route path="/events/store-openings" element={<StoreOpenings />} />
           <Route path="/events/birthdays" element={<BirthdayParties />} />
           <Route path="/events/ngo" element={<NgoEvents />} />
+          {/* Area pages — only where there is recorded work */}
+          <Route path="/areas/tripoli" element={<TripoliArea />} />
+          <Route path="/areas/koura" element={<KouraArea />} />
+          <Route path="/areas/beirut" element={<BeirutArea />} />
           <Route path="/sponsorship" element={<Sponsorship />} />
           <Route path="/build-your-event" element={<BuildYourEvent />} />
           <Route path="/product/:id" element={<ProductDetails />} />

@@ -63,7 +63,7 @@ export function SchoolEvents() {
         },
         {
           heading: 'Anywhere in Lebanon, including village schools',
-          body: 'We deliver to schools across the whole country, not only in Beirut and Tripoli. Village and mountain schools are part of our normal range — we have set up in mountain areas including Bikaakafra and Hadath El Jebbeh — and we plan the access and the power supply with you before the date.',
+          body: 'We deliver to schools across the whole country, not only in Beirut and Tripoli. Village and mountain schools are part of our normal range — we have set up in the mountain village of Bqaakafra — and we plan the access and the power supply with you before the date.',
         },
       ]}
       faqs={[
