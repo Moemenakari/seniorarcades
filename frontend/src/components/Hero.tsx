@@ -157,8 +157,10 @@ export function Hero() {
             {/* Performance Stats — mini cards */}
             <div className="flex items-center gap-3 sm:gap-5 pt-3 sm:pt-5 mt-1 sm:mt-2" style={{ borderTop: '1px solid rgba(255,255,255,0.1)' }}>
               {[
-                { val: '50+', label: 'Games', icon: SportsScoreIcon },
-                { val: '1000+', label: 'Events/Year', icon: CelebrationIcon },
+                // Figures confirmed by the business owner. "Events" is a
+                // running total, not a yearly rate.
+                { val: '15', label: 'Games', icon: SportsScoreIcon },
+                { val: '1000+', label: 'Events', icon: CelebrationIcon },
                 { val: '100%', label: 'Satisfaction', icon: ThumbUpAltIcon },
               ].map((stat) => {
                 const Icon = stat.icon;

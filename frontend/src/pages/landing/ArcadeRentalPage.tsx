@@ -51,7 +51,7 @@ export function ArcadeRental() {
     <LandingPage
       kicker="Rental Service"
       h1="Arcade Game Rental in Lebanon"
-      lead="Next Level Game rents arcade and carnival game machines for events anywhere in Lebanon. We deliver, install, plan the power supply and staff the games, then take everything away when the event ends."
+      lead="Next Level Game rents arcade and carnival game machines for events anywhere in Lebanon. Our fleet covers 15 games and we have delivered more than 1,000 events over four years. We deliver, install, plan the power supply and staff the games, then take everything away when the event ends."
       title="Arcade Game Rental in Lebanon | Next Level Game"
       description="Rent arcade and carnival games anywhere in Lebanon. Delivery, installation, power planning and on-site staff included. WhatsApp 03 919 876 for a quote."
       canonical="/services/arcade-rental"

@@ -282,9 +282,14 @@ export function Testimonials() {
           transition={{ duration: 0.5 }}
         >
           {[
-            { val: '1000+', label: 'Events/Year', color: '#FFD700' },
+            // Figures confirmed by the business owner. "Events" is a running
+            // total, not a yearly rate. The rating is shown as
+            // plain text on purpose and is NOT marked up as AggregateRating:
+            // Google requires that to come from reviews collected and
+            // displayed on the page, and the ratings table is still empty.
+            { val: '1000+', label: 'Events', color: '#FFD700' },
             { val: '5.0', label: 'Avg Rating', color: '#FFD700' },
-            { val: '50+', label: 'Games', color: '#E53935' },
+            { val: '15', label: 'Games', color: '#E53935' },
             { val: '100%', label: 'Satisfaction', color: '#E53935' },
           ].map((stat) => (
             <div

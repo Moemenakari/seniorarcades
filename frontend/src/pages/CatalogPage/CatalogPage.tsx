@@ -72,7 +72,7 @@ export function Catalog() {
     <div className="bg-white min-h-screen">
       <Seo
         title="Arcade Game Catalog for Rent in Lebanon | Next Level Game"
-        description="Browse 50+ arcade, retro, VR and carnival games for rent across Lebanon. Perfect for parties, festivals and corporate events in Beirut and Tripoli. Book now!"
+        description="Browse 15 arcade, carnival and inflatable games for rent across Lebanon. For parties, festivals, schools and corporate events in Beirut, Tripoli and beyond."
         canonical="/catalog"
       />
 

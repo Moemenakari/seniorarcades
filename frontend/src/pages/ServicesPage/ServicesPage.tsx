@@ -22,7 +22,7 @@ const services = [
   {
     icon: Package,
     title: 'Elite Arcade Rental',
-    description: 'Hand-pick from 50+ premium machines — from nostalgic classics to cutting-edge simulators. Every unit arrives event-ready and fully tested.',
+    description: 'Pick from 15 arcade, carnival and inflatable games — from strength testers and simulators to prize machines. Every unit arrives event-ready and fully tested.',
     features: ['Flexible 1-day to long-term rentals', 'All categories available', 'Preventive maintenance included', 'Rapid swap if any issue arises'],
     color: '#E53935'
   },
@@ -74,11 +74,13 @@ const eventTypes = [
   { name: 'Malls & Public Spaces', icon: MapPin },
 ];
 
+// Figures confirmed by the business owner. Events is a running total, not a
+// yearly rate.
 const whyChooseUs = [
-  { title: 'Machines in Fleet', description: 'The largest premium arcade collection available for event rental in Lebanon', stat: '50+' },
+  { title: 'Games in Fleet', description: 'Arcade, carnival and inflatable games, all available for event rental', stat: '15' },
+  { title: 'Events Delivered', description: 'Across the whole of Lebanon, from city venues to mountain villages', stat: '1000+' },
   { title: 'Client Satisfaction', description: 'Every event we\'ve powered has left clients asking us back', stat: '100%' },
-  { title: 'Support Coverage', description: 'Always reachable — before, during, and after your event', stat: '24/7' },
-  { title: 'Years Delivering', description: 'A proven track record of making events legendary', stat: '5+' },
+  { title: 'Years Delivering', description: 'Four years running events across Lebanon', stat: '4' },
 ];
 
 // Revenue funnel steps
@@ -245,7 +247,7 @@ export function Services() {
           <div className="text-center mb-12">
             <h2 className="text-3xl sm:text-4xl mb-3" style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 700, color: '#1a2332' }}>Events We Specialise In</h2>
             <p className="text-lg max-w-2xl mx-auto text-gray-500" style={{ fontFamily: 'Open Sans, sans-serif' }}>
-              Hundreds of successful events across Lebanon — from university campuses to open-air festivals.
+              More than 1,000 events delivered across Lebanon — from university campuses to open-air festivals and mountain villages.
             </p>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
@@ -412,7 +414,7 @@ export function Services() {
               Ready to Level Up Your Event?
             </h2>
             <p className="text-xl mb-8 text-white/90 max-w-2xl mx-auto" style={{ fontFamily: 'Open Sans, sans-serif' }}>
-              Join hundreds of satisfied event organizers. Let's talk about what we can build together.
+              Join the organisers behind more than 1,000 events we have delivered. Let's talk about what we can build together.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <a href="https://wa.me/96103919876" target="_blank" rel="noopener noreferrer">
