@@ -142,6 +142,7 @@ export function ArcadeCatalog() {
               >
                 {/* Machine Image */}
                 <ImageWithFallback
+                  displayWidth={300}
                   src={game.image}
                   alt={game.title}
                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"

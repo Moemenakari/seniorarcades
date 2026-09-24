@@ -108,7 +108,7 @@ export function Services() {
       <section className="relative py-20 text-white overflow-hidden" style={{ backgroundColor: '#1a2332' }}>
         <div className="absolute inset-0 opacity-10">
           <ImageWithFallback 
-            src="https://images.unsplash.com/photo-1758706552632-64ab529c2631?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080"
+            src="https://images.unsplash.com/photo-1758706552632-64ab529c2631?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=50&w=800"
             alt="Event setup" className="w-full h-full object-cover" />
         </div>
         <div className="absolute inset-0 opacity-20"

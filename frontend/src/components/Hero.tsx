@@ -33,10 +33,12 @@ export function Hero() {
       {/* =============================
           1. BACKGROUND IMAGE + OVERLAY
           ============================= */}
-      <div 
-        className="absolute inset-0 z-0"
+      {/* The image size is picked by a media query in index.css (.hero-bg),
+          not here: the page is pre-rendered, so a JS choice would bake one
+          size into the HTML for every visitor. */}
+      <div
+        className="hero-bg absolute inset-0 z-0"
         style={{
-          backgroundImage: 'url("https://images.unsplash.com/photo-1511512578047-dfb367046420?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80")',
           backgroundSize: 'cover',
           backgroundPosition: 'center',
         }}

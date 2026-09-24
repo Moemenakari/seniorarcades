@@ -20,7 +20,7 @@ import {
 import { AuthModal } from './AuthModal';
 import { clearSession, getAuthToken } from '../utils/authSession';
 
-import logo from '../assets/logo.png';
+import logo from '../assets/logo-96.webp';
 
 export function Footer() {
   const [isAuthOpen, setIsAuthOpen] = useState(false);
@@ -44,7 +44,7 @@ export function Footer() {
               ============================= */}
           <div>
             <div className="flex items-center gap-3 mb-4">
-              <img src={logo} alt="Next Level Game" className="w-10 h-10 object-contain" />
+              <img src={logo} alt="Next Level Game" width={40} height={40} loading="lazy" decoding="async" className="w-10 h-10 object-contain" />
               <h3
                 className="text-lg sm:text-xl"
                 style={{

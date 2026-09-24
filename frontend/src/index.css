@@ -137,3 +137,15 @@
     line-height: 1.5;
   }
 }
+
+/* Home hero background. It sits under a 75-92% dark overlay, so a phone
+   gets an 800px copy and only large screens get 1600px; the original
+   2070px added weight nobody could see. */
+.hero-bg {
+  background-image: url("https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=800&q=60");
+}
+@media (min-width: 768px) {
+  .hero-bg {
+    background-image: url("https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=1600&q=70");
+  }
+}

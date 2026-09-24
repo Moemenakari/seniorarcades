@@ -136,6 +136,7 @@ export function LocationCarousel() {
                   className="relative w-40 h-52 sm:w-56 sm:h-72 flex-shrink-0 rounded-xl sm:rounded-2xl overflow-hidden shadow-md"
                 >
                   <ImageWithFallback
+                    displayWidth={320}
                     src={loc.image_url}
                     alt={loc.name}
                     className="w-full h-full object-cover"

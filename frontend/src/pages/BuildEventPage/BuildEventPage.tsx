@@ -14,6 +14,7 @@ import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 import InfoIcon from '@mui/icons-material/Info';
 import { AuthModal } from '../../components/AuthModal';
 import { Seo } from '../../components/Seo';
+import { sizedImageUrl } from '../../components/figma/ImageWithFallback';
 import { getAuthToken, getStoredUser } from '../../utils/authSession';
 import { API_BASE_URL } from '../../config';
 
@@ -272,7 +273,7 @@ Notes: ${contactDetails.notes || 'N/A'}`;
                     <div key={game.id} className={`bg-white rounded-2xl border transition-all ${qty > 0 ? 'border-[#E53935] shadow-md' : 'border-gray-100 shadow-sm'}`}>
                       <div className="flex p-3 gap-3">
                         <div className="w-16 h-16 rounded-xl bg-gray-100 overflow-hidden flex-shrink-0">
-                          <img src={game.image_url} alt={game.title} className="w-full h-full object-cover" />
+                          <img src={sizedImageUrl(game.image_url, 160)} alt={game.title} width={64} height={64} loading="lazy" decoding="async" className="w-full h-full object-cover" />
                         </div>
                         <div className="flex-1 flex flex-col justify-center">
                           <h3 className="text-sm font-black text-[#1a2332] line-clamp-1">{game.title}</h3>

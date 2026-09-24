@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Menu, X } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
-import logo from '../assets/logo.png';
+import logo from '../assets/logo-96.webp';
 
 const NAV_LINKS = [
   { label: 'Home', path: '/' },
@@ -26,7 +26,7 @@ export function Navigation() {
 
           {/* Brand */}
           <Link to="/" className="flex items-center gap-2 sm:gap-2.5 flex-shrink-0">
-            <img src={logo} alt="Next Level Game" className="w-8 h-8 sm:w-10 sm:h-10 object-contain" />
+            <img src={logo} alt="Next Level Game" width={40} height={40} className="w-8 h-8 sm:w-10 sm:h-10 object-contain" />
             <span className="text-sm sm:text-lg" style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800, color: '#1a2332' }}>
               Next Level Game
             </span>

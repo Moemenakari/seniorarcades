@@ -3,7 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import StarIcon from '@mui/icons-material/Star';
 import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
-import { ImageWithFallback } from '../../components/figma/ImageWithFallback';
+import { ImageWithFallback, sizedImageUrl } from '../../components/figma/ImageWithFallback';
 import { AuthModal } from '../../components/AuthModal';
 import { Seo } from '../../components/Seo';
 import { getAuthToken } from '../../utils/authSession';
@@ -260,6 +260,8 @@ export function ProductDetails() {
           <div>
             <div className="rounded-2xl overflow-hidden border border-gray-200 bg-gray-50 aspect-[4/3]">
               <ImageWithFallback
+                displayWidth={640}
+                priority
                 src={images[selectedImage] || ''}
                 alt={product.name}
                 className="w-full h-full object-cover"
@@ -273,7 +275,7 @@ export function ProductDetails() {
                     onClick={() => setSelectedImage(idx)}
                     className={`rounded-lg overflow-hidden border ${selectedImage === idx ? 'border-[#E53935]' : 'border-gray-200'}`}
                   >
-                    <img src={img} alt={`Product ${idx + 1}`} className="w-full h-20 object-cover" />
+                    <img src={sizedImageUrl(img, 200)} alt={`${product.name} — photo ${idx + 1}`} loading="lazy" decoding="async" className="w-full h-20 object-cover" />
                   </button>
                 ))}
               </div>

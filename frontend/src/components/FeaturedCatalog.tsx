@@ -102,7 +102,7 @@ export function FeaturedCatalog() {
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.05, duration: 0.4 }}
                 onClick={() => navigate(`/product/${game.id}`)}>
-                <ImageWithFallback src={game.image_url} alt={game.title}
+                <ImageWithFallback src={game.image_url} alt={game.title} displayWidth={300}
                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
                 <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center"
                   style={{ background: 'rgba(26,35,50,0.7)', backdropFilter: 'blur(2px)' }}>

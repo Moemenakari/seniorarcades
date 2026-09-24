@@ -306,6 +306,7 @@ export function Sponsorship() {
                     aria-label={`View photo: ${photo.alt}`}
                   >
                     <ImageWithFallback
+                      displayWidth={400}
                       src={photo.url}
                       alt={photo.alt}
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
