@@ -159,6 +159,14 @@ function serve() {
 
       console.log(`  ok    ${route.padEnd(20)} ${String(words).padStart(5)} words  |  ${title.slice(0, 52)}`);
     } catch (err) {
+      // A game page depends on the API answering in time. If one does not
+      // render, skip it — it stays reachable as a normal client-side page
+      // and simply stays out of the sitemap until the next build. Only the
+      // marketing pages are allowed to fail the deploy.
+      if (route.startsWith('/product/')) {
+        console.warn(`  warn  ${route.padEnd(20)} skipped: ${err.message.split('\n')[0]}`);
+        continue;
+      }
       failures += 1;
       console.log(`  FAIL  ${route.padEnd(20)} ${err.message.split('\n')[0]}`);
     } finally {
