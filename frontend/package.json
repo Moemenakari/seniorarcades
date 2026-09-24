@@ -85,6 +85,7 @@
     ]
   },
   "devDependencies": {
+    "@sparticuz/chromium": "^153.0.0",
     "autoprefixer": "^10.4.17",
     "postcss": "^8.4.35",
     "puppeteer": "^25.12.0",

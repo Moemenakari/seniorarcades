@@ -95,6 +95,28 @@ function addToSitemap(routes) {
   fs.writeFileSync(file, xml);
 }
 
+/**
+ * Vercel's build machine lacks the system libraries Chrome links against
+ * (libnspr4, libnss3 and others), so Puppeteer's own Chrome exits with
+ * code 127 there. @sparticuz/chromium ships a Chromium built with those
+ * libraries included, so on Linux we use it; everywhere else Puppeteer's
+ * bundled Chrome works as-is.
+ */
+async function launchBrowser() {
+  if (process.platform === 'linux') {
+    const { default: chromium } = await import('@sparticuz/chromium');
+    return puppeteer.launch({
+      executablePath: await chromium.executablePath(),
+      args: chromium.args,
+      headless: 'shell',
+    });
+  }
+  return puppeteer.launch({
+    headless: 'new',
+    args: ['--no-sandbox', '--disable-setuid-sandbox'],
+  });
+}
+
 /** Minimal static server that falls back to index.html, like Vercel does. */
 function serve() {
   return http.createServer((req, res) => {
@@ -121,10 +143,7 @@ function serve() {
 
   SHELL = fs.readFileSync(path.join(BUILD, 'index.html'));
   const server = serve();
-  const browser = await puppeteer.launch({
-    headless: 'new',
-    args: ['--no-sandbox', '--disable-setuid-sandbox'],
-  });
+  const browser = await launchBrowser();
 
   console.log('\nPre-rendering\n');
   let failures = 0;
