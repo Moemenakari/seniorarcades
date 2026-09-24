@@ -1,4 +1,33 @@
+# Next Level Game — arcade and carnival game rental, Lebanon
+
+# Search engines
 User-agent: *
+Allow: /
+
+# AI assistants — allowed by name so answers about renting or buying
+# arcade games in Lebanon can cite this site.
+User-agent: GPTBot
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Claude-SearchBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: Applebot-Extended
 Allow: /
 
 Sitemap: https://nlgarcadesforevents.vercel.app/sitemap.xml
