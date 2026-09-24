@@ -49,7 +49,7 @@ export function FestivalSupply() {
   return (
     <LandingPage
       kicker="Festival Supply"
-      h1="Complete Festival Game Supply in Lebanon"
+      h1="Festival Games in Lebanon — Complete Supply"
       lead="Next Level Game can supply the entire games section of a festival: multiple machines, delivery, installation, power planning and on-site staff for the whole run of the event. You book one supplier instead of coordinating several."
       title="Festival Games Supplier in Lebanon | Next Level Game"
       description="We supply the whole games section of a festival in Lebanon — multiple machines, delivery, installation, power planning and staff. WhatsApp 03 919 876."

@@ -78,7 +78,7 @@ export function Hero() {
                 className="text-xs sm:text-sm tracking-wide"
                 style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 700, color: '#FFD700' }}
               >
-                #1 Arcade Entertainment in Lebanon
+                Arcade Entertainment in Lebanon
               </span>
             </motion.div>
 
@@ -87,12 +87,11 @@ export function Hero() {
               className="text-[28px] sm:text-4xl lg:text-5xl xl:text-6xl leading-[1.15] text-white pt-8 sm:pt-4"
               style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800 }}
             >
-              Rent or Sell Arcade Games,
+              {/* Covers both rent and buy. The rental-only phrase belongs to
+                  /services/arcade-rental, so Home must not compete for it. */}
+              Rent & Buy Arcade Games
               <span className="block mt-1 text-[#E53935]">
-                Inflatables & More
-              </span>
-              <span className="block mt-0.5" style={{ color: '#FFD700' }}>
-                for Your Next Event
+                in Lebanon
               </span>
             </h1>
 
@@ -109,6 +108,7 @@ export function Hero() {
               style={{ fontFamily: 'Open Sans, sans-serif' }}
             >
               Boxing, basketball, shooting games, inflatables & more for parties, corporate events & festivals.
+              We also sell arcade machines and place them in venues on revenue share.
               <br className="hidden sm:block" />
               Call or WhatsApp: <span className="text-[#FFD700]">03 919 876</span>. Book now!
             </p>

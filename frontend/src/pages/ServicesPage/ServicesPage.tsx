@@ -122,10 +122,13 @@ export function Services() {
                 End-to-End Arcade Solutions
               </span>
             </div>
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl mb-6" style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800 }}>
-              We Don't Just Deliver Games.<br />
-              <span style={{ color: '#FFD700' }}>We Deliver Moments.</span>
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl mb-4" style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800 }}>
+              Arcade & Event Game Services <span style={{ color: '#FFD700' }}>in Lebanon</span>
             </h1>
+            {/* The slogan stays, but as a subheading: nobody searches for it. */}
+            <p className="text-2xl sm:text-3xl mb-6" style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 700 }}>
+              We Don't Just Deliver Games. <span style={{ color: '#FFD700' }}>We Deliver Moments.</span>
+            </p>
             <p className="text-xl sm:text-2xl max-w-3xl mx-auto text-white/80" style={{ fontFamily: 'Open Sans, sans-serif', fontWeight: 400 }}>
               Comprehensive arcade entertainment solutions — built to make your event unforgettable and your crowd come back for more.
             </p>

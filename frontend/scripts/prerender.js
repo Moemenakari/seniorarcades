@@ -174,7 +174,13 @@ function serve() {
       const dir = route === '/' ? BUILD : path.join(BUILD, route);
       fs.mkdirSync(dir, { recursive: true });
       fs.writeFileSync(path.join(dir, 'index.html'), html);
-      if (route.startsWith('/product/')) renderedProducts.push(route);
+      // A sitemap may only list canonical URLs. A game page that names a
+      // dedicated page as canonical (the Human Claw Machine points to
+      // /sponsorship) is rendered for visitors but left out of the sitemap.
+      const canonical = (html.match(/<link[^>]*rel="canonical"[^>]*href="([^"]+)"/) || [])[1];
+      if (route.startsWith('/product/') && canonical === `${SITE_URL}${route}`) {
+        renderedProducts.push(route);
+      }
 
       console.log(`  ok    ${route.padEnd(20)} ${String(words).padStart(5)} words  |  ${title.slice(0, 52)}`);
     } catch (err) {

@@ -90,7 +90,8 @@ export function Catalog() {
               <span className="text-xs font-bold tracking-widest uppercase" style={{ color: '#FFD700', fontFamily: 'Open Sans, sans-serif' }}>Full Catalog</span>
             </div>
             <h1 className="text-3xl sm:text-5xl mb-4 text-white" style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800 }}>
-              Our Arcade <span style={{ color: '#FFD700' }}>Collection</span>
+              {/* Browse intent. No game count here: it would go stale with every new game. */}
+              Our Arcade & Carnival Games <span style={{ color: '#FFD700' }}>for Rent in Lebanon</span>
             </h1>
             <p className="text-white/70 text-base sm:text-lg max-w-2xl mx-auto" style={{ fontFamily: 'Open Sans, sans-serif' }}>
               Every machine available for rent — from classic retro cabinets to next-gen simulators.

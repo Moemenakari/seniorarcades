@@ -38,6 +38,23 @@ interface Product {
   badge?: string;
 }
 
+/**
+ * Games that already have a dedicated page elsewhere on the site.
+ *
+ * The game stays in the catalog so customers browsing find it, but its
+ * product page names the dedicated page as canonical, so Google treats the
+ * two as one page instead of splitting their ranking between them.
+ * Matched on the name, because the id is whatever the admin assigns.
+ */
+const DEDICATED_PAGES: { match: RegExp; path: string }[] = [
+  { match: /human\s*claw/i, path: '/sponsorship' },
+];
+
+function canonicalFor(name: string, id: string | undefined): string {
+  const dedicated = DEDICATED_PAGES.find(entry => entry.match.test(name));
+  return dedicated ? dedicated.path : `/product/${id}`;
+}
+
 export function ProductDetails() {
   const { id } = useParams<{ id: string }>();
   const [product, setProduct] = useState<Product | null>(null);
@@ -230,7 +247,7 @@ export function ProductDetails() {
       <Seo
         title={`${product.name} Rental in Lebanon | Next Level Game`}
         description={`Rent the ${product.name} for your next event in Lebanon. ${product.category || 'Arcade'} game available in Beirut, Tripoli and nationwide. Book via WhatsApp!`}
-        canonical={`/product/${id}`}
+        canonical={canonicalFor(product.name, id)}
         image={images[0]}
         jsonLd={productJsonLd}
       />
@@ -279,7 +296,7 @@ export function ProductDetails() {
             </div>
 
             <h1 className="text-2xl sm:text-3xl text-[#1a2332] mb-2" style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800 }}>
-                {product.name}
+                {product.name} Rental in Lebanon
             </h1>
             <div className="flex items-center gap-1 mb-5">
               <StarIcon style={{ fontSize: 18, color: '#FFD700' }} />

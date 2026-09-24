@@ -49,7 +49,7 @@ export function RevenueShare() {
   return (
     <LandingPage
       kicker="Partnership"
-      h1="Arcade Machines for Your Venue — Revenue Share"
+      h1="Arcade Machines for Your Venue in Lebanon — Revenue Share"
       lead="If you have floor space that is not earning, we can place arcade machines in it and share the income they generate. You do not buy the machines and you do not maintain them: we own them, install them and service them, and you take a share of what they make."
       title="Arcade Machines for Your Venue in Lebanon | Revenue Share"
       description="Turn unused floor space into income. We place and maintain arcade machines in venues across Lebanon on a revenue-share basis. WhatsApp 03 919 876."

@@ -23,8 +23,8 @@ export function Home() {
   return (
     <>
       <Seo
-        title="Arcade & Carnival Game Rental Lebanon | Next Level Game"
-        description="Rent arcade, carnival & inflatable games for parties, weddings, corporate events and festivals in Beirut, Tripoli and all across Lebanon. Book your event today!"
+        title="Rent & Buy Arcade Games in Lebanon | Next Level Game"
+        description="Rent or buy arcade and carnival games in Lebanon. Machines for festivals, universities, schools, store openings and birthdays, delivered across the country."
         canonical="/"
       />
 

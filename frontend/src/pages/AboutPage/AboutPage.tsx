@@ -22,7 +22,7 @@ export function AboutUs() {
   return (
     <div className="bg-[#f8f9fb] min-h-screen pb-16 font-sans">
       <Seo
-        title="About Next Level Game | Arcade Rental Company Lebanon"
+        title="About Next Level Game | Tripoli, Lebanon"
         description="Meet Next Level Game, Lebanon's leading arcade and carnival rental company based in Tripoli, proudly serving events across Beirut and the whole country."
         canonical="/about"
       />

@@ -37,11 +37,9 @@
     <priority>0.6</priority>
   </url>
   <!--
-    Individual game pages (/product/:id) are intentionally left out of this static
-    sitemap: their IDs come from the live database and a hand-written entry could
-    point to a game that no longer exists. Google still finds and indexes them by
-    following the links on /catalog. If you want them listed explicitly, generate
-    this file from the backend's /products endpoint at deploy time instead of by hand.
+    Game pages (/product/:id) are not listed here by hand: their IDs come from
+    the live database. scripts/prerender.js appends them to the built sitemap
+    at deploy time, skipping any whose canonical points to a dedicated page.
   -->
   <url>
     <loc>https://nlgarcadesforevents.vercel.app/services/arcade-rental</loc>
