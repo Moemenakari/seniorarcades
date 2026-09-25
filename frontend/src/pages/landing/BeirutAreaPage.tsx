@@ -92,6 +92,7 @@ export function BeirutArea() {
         { label: 'Arcade game rental in Koura', to: '/areas/koura' },
       ]}
       jsonLd={[serviceSchema]}
+      caseStudyPlaces={['Beirut']}
     />
   );
 }

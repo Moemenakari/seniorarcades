@@ -6,8 +6,10 @@ import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
 import { ImageWithFallback, sizedImageUrl } from '../../components/figma/ImageWithFallback';
 import { AuthModal } from '../../components/AuthModal';
 import { Seo } from '../../components/Seo';
+import { RelatedGames } from '../../components/RelatedGames';
 import { getAuthToken } from '../../utils/authSession';
 import { API_BASE_URL } from '../../config';
+import { productAlt } from '../../utils/productAlt';
 
 interface Rating {
   id: number;
@@ -263,7 +265,7 @@ export function ProductDetails() {
                 displayWidth={640}
                 priority
                 src={images[selectedImage] || ''}
-                alt={product.name}
+                alt={productAlt(product, selectedImage + 1)}
                 className="w-full h-full object-cover"
               />
             </div>
@@ -275,7 +277,7 @@ export function ProductDetails() {
                     onClick={() => setSelectedImage(idx)}
                     className={`rounded-lg overflow-hidden border ${selectedImage === idx ? 'border-[#E53935]' : 'border-gray-200'}`}
                   >
-                    <img src={sizedImageUrl(img, 200)} alt={`${product.name} — photo ${idx + 1}`} loading="lazy" decoding="async" className="w-full h-20 object-cover" />
+                    <img src={sizedImageUrl(img, 200)} alt={productAlt(product, idx + 1)} loading="lazy" decoding="async" className="w-full h-20 object-cover" />
                   </button>
                 ))}
               </div>
@@ -380,6 +382,8 @@ export function ProductDetails() {
             )}
           </div>
         </div>
+
+        <RelatedGames currentId={product.id} category={product.category} />
       </div>
 
       <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} onSuccess={() => { setIsAuthModalOpen(false); submitRating(); }} />

@@ -8,6 +8,25 @@ import StarIcon from '@mui/icons-material/Star';
 import SendIcon from '@mui/icons-material/Send';
 import { Seo } from '../../components/Seo';
 
+const SITE_URL = 'https://nlgarcadesforevents.vercel.app';
+
+// Describes the founder section below. Google expects structured data to
+// match what the page visibly shows, so every field here appears there.
+const founderSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'Person',
+  name: 'Mouemen Akkarie',
+  jobTitle: 'Founder and Developer',
+  description: 'Founder of Next Level Game, and the developer who designed and built its website and the management system the team uses to run events.',
+  worksFor: {
+    '@type': 'Organization',
+    name: 'Next Level Game',
+    url: SITE_URL,
+  },
+  url: `${SITE_URL}/about`,
+  sameAs: ['https://github.com/Moemenakari'],
+};
+
 export function AboutUs() {
   const [showQuickForm, setShowQuickForm] = useState(false);
   const [quickForm, setQuickForm] = useState({ name: '', phone: '' });
@@ -25,6 +44,7 @@ export function AboutUs() {
         title="About Next Level Game | Tripoli, Lebanon"
         description="Meet Next Level Game, an arcade and carnival rental company based in Tripoli, proudly serving events across Beirut and the whole country."
         canonical="/about"
+        jsonLd={[founderSchema]}
       />
       {/* SECTION 1: ABOUT NEXT LEVEL GAME */}
       <section className="bg-[#1a2332] py-20 px-4 text-center">
@@ -133,6 +153,28 @@ export function AboutUs() {
           </motion.div>
         </div>
       </div>
+
+      {/* SECTION 3: FOUNDER */}
+      <section className="max-w-5xl mx-auto px-4 sm:px-6 mt-10" aria-labelledby="founder-heading">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sm:p-8">
+          <p className="text-[#E53935] text-sm font-bold uppercase tracking-widest mb-2" style={{ fontFamily: 'Open Sans, sans-serif' }}>
+            Founder
+          </p>
+          <h2 id="founder-heading" className="text-2xl font-bold mb-1" style={{ fontFamily: 'Montserrat, sans-serif', color: '#1a2332' }}>
+            Mouemen Akkarie
+          </h2>
+          <p className="text-gray-500 mb-4" style={{ fontFamily: 'Open Sans, sans-serif' }}>Founder and Developer</p>
+          <p className="text-gray-600 leading-relaxed mb-5" style={{ fontFamily: 'Open Sans, sans-serif' }}>
+            Mouemen founded Next Level Game in Tripoli. He also designed and built this website and the
+            management system the team uses to plan events, track the machines and run the business.
+          </p>
+          <a href="https://github.com/Moemenakari" target="_blank" rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 text-sm font-bold text-[#1a2332] hover:text-[#E53935] transition-colors"
+            style={{ fontFamily: 'Montserrat, sans-serif' }}>
+            GitHub profile →
+          </a>
+        </div>
+      </section>
     </div>
   );
 }

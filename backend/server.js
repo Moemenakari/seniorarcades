@@ -43,6 +43,9 @@ app.use('/api/ratings', ratingRoutes);
 app.use('/api/sponsorship', sponsorshipRoutes);
 app.use('/api/upload', adminProtect, uploadRoutes);
 
+// Public: completed case studies with safe fields only (see the controller).
+app.get('/api/case-studies', require('./controllers/caseStudy.controller').listPublic);
+
 app.get('/api/locations', async (req, res) => {
   try {
     const locations = await db.prepare('SELECT * FROM locations ORDER BY created_at DESC').all();
@@ -193,12 +196,33 @@ app.use('*', (req, res) => res.status(404).json({ error: 'Route not found' }));
 
 const PORT = process.env.PORT || 5000;
 
+// Additive, idempotent migrations run on every start. Each one only adds
+// a column or a table, so running it against a database that already has
+// it does nothing.
+const MIGRATIONS = [
+  ['audit_logs.hidden', 'ALTER TABLE audit_logs ADD COLUMN IF NOT EXISTS hidden BOOLEAN DEFAULT FALSE'],
+  // Describes the product photos for Google Images and screen readers.
+  ['products.alt_text', "ALTER TABLE products ADD COLUMN IF NOT EXISTS alt_text TEXT DEFAULT ''"],
+  // Case studies: how many people attended, and which games were used.
+  ['events.attendance', 'ALTER TABLE events ADD COLUMN IF NOT EXISTS attendance INTEGER'],
+  // The place name shown publicly. The internal location field is free text
+  // that can name a client or a school, so it is never published as is.
+  ['events.case_study_place', "ALTER TABLE events ADD COLUMN IF NOT EXISTS case_study_place TEXT DEFAULT ''"],
+  ['event_games', `CREATE TABLE IF NOT EXISTS event_games (
+      event_id BIGINT NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+      product_id BIGINT NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+      PRIMARY KEY (event_id, product_id)
+    )`],
+];
+
 const initDB = async () => {
-  try {
-    await db.exec("ALTER TABLE audit_logs ADD COLUMN IF NOT EXISTS hidden BOOLEAN DEFAULT FALSE");
-    console.log('✅ DB migration: audit_logs.hidden column ready');
-  } catch (e) {
-    console.error('❌ DB migration error:', e.message);
+  for (const [name, sql] of MIGRATIONS) {
+    try {
+      await db.exec(sql);
+      console.log(`✅ DB migration: ${name} ready`);
+    } catch (e) {
+      console.error(`❌ DB migration ${name}:`, e.message);
+    }
   }
 };
 

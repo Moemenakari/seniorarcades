@@ -28,6 +28,7 @@ import {
 } from 'lucide-react';
 import axios from 'axios';
 import { API_BASE_URL as API } from '../../config';
+import { CaseStudyModal } from '../../components/CaseStudyModal';
 
 // =============================
 // MAIN PAGE COMPONENT
@@ -40,6 +41,7 @@ const Events = () => {
   const [showForm, setShowForm] = useState(false);
   const [editingEvent, setEditingEvent] = useState(null);
   const [viewStatsEvent, setViewStatsEvent] = useState(null);
+  const [caseStudyEvent, setCaseStudyEvent] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedIds, setSelectedIds] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -664,6 +666,7 @@ const Events = () => {
                       <td className="px-6 py-4 text-right">
                         <div className="flex items-center gap-2 justify-end opacity-0 group-hover:opacity-100 transition-opacity">
                           <button onClick={() => setViewStatsEvent(ev)} className="px-3 py-1.5 text-sm font-black bg-indigo-50 text-indigo-600 rounded-lg">STATS</button>
+                          <button onClick={() => setCaseStudyEvent(ev)} title="Show this event on the website" className="px-3 py-1.5 text-sm font-black bg-emerald-50 text-emerald-700 rounded-lg">CASE STUDY</button>
                           <button onClick={() => handleEdit(ev)} className="p-1.5 text-blue-600 bg-blue-50 rounded-lg"><Edit className="w-4 h-4" /></button>
                           <button onClick={() => openDeleteModal(ev.id, ev.event_name)} className="p-1.5 text-red-600 bg-red-50 rounded-lg"><Trash2 className="w-4 h-4" /></button>
                         </div>
@@ -727,6 +730,8 @@ const Events = () => {
       {/* =============================
           5. INTELLIGENCE MODAL (STATS & AI)
           ============================= */}
+      {caseStudyEvent && <CaseStudyModal event={caseStudyEvent} onClose={() => setCaseStudyEvent(null)} />}
+
       {viewStatsEvent && (() => {
          const totalExpenses = (parseFloat(viewStatsEvent.food_cost)||0) + (parseFloat(viewStatsEvent.gas_cost)||0) + (parseFloat(viewStatsEvent.event_manager_pay)||0);
          const totalRevenue = (parseFloat(viewStatsEvent.profit)||0) + totalExpenses;

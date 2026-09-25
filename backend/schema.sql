@@ -249,3 +249,23 @@ ON CONFLICT (setting_key) DO NOTHING;
 -- It previously shipped with stock photos captioned as real Next Level Game
 -- events (named festivals, attendance figures). None of that happened, so it
 -- was removed. Add the real photos through the admin panel.
+
+-- ============================================================
+-- SEO and case-study columns (also applied at server start)
+-- ============================================================
+-- Describes the product photos for Google Images and screen readers.
+-- Empty means the site falls back to "<name> rental in Lebanon".
+ALTER TABLE products ADD COLUMN IF NOT EXISTS alt_text TEXT DEFAULT '';
+
+-- Case studies: an event is shown publicly only once it has an
+-- attendance figure and at least one game linked below.
+ALTER TABLE events ADD COLUMN IF NOT EXISTS attendance INTEGER;
+-- Public place name for the case study; the internal location field is
+-- free text that can name a client, so it is never published directly.
+ALTER TABLE events ADD COLUMN IF NOT EXISTS case_study_place TEXT DEFAULT '';
+
+CREATE TABLE IF NOT EXISTS event_games (
+  event_id BIGINT NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+  product_id BIGINT NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+  PRIMARY KEY (event_id, product_id)
+);

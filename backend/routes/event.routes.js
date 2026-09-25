@@ -13,6 +13,7 @@ const router = express.Router();
 const { guardIdParams } = require('../middleware/validateId');
 guardIdParams(router);
 const eventController = require('../controllers/event.controller');
+const caseStudyController = require('../controllers/caseStudy.controller');
 
 /**
  * ==========================================
@@ -38,6 +39,10 @@ router.put('/:id', eventController.updateEvent);
 
 // Update event status specifically
 router.put('/:id/status', eventController.updateStatus);
+
+// Case study: attendance, public place name and the games used
+router.get('/:id/case-study', caseStudyController.getCaseStudy);
+router.put('/:id/case-study', caseStudyController.saveCaseStudy);
 
 // Archive event (Soft delete)
 router.delete('/:id', eventController.archiveEvent);

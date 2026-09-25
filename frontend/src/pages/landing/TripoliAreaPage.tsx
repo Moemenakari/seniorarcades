@@ -113,6 +113,7 @@ export function TripoliArea() {
         { label: 'Complete festival supply', to: '/services/festival-supply' },
       ]}
       jsonLd={[serviceSchema]}
+      caseStudyPlaces={['Tripoli', 'Kalamoun', 'Qalamoun', 'Akkar', 'Chekka', 'Bqaakafra', 'Bekaa Kafra', 'Minieh', 'Zgharta', 'Bsharri']}
     />
   );
 }

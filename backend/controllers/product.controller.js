@@ -65,7 +65,7 @@ exports.getProduct = async (req, res) => {
 };
 
 exports.addProduct = async (req, res) => {
-  const { name, description, min_price, max_price, category, space_required, needs_electricity, electricity_amount, has_coins, extra_features, image_url, badge, image_url2, image_url3, status } = req.body;
+  const { name, description, min_price, max_price, category, space_required, needs_electricity, electricity_amount, has_coins, extra_features, image_url, badge, image_url2, image_url3, status, alt_text } = req.body;
   const parsedMin = parseFloat(min_price);
   const parsedMax = parseFloat(max_price);
   if (!name || Number.isNaN(parsedMin) || Number.isNaN(parsedMax) || parsedMin < 0 || parsedMax < 0 || parsedMin > parsedMax) {
@@ -76,8 +76,8 @@ exports.addProduct = async (req, res) => {
 
   try {
     const result = await db.prepare(
-      "INSERT INTO products (name, description, min_price, max_price, average_price, category, space_required, needs_electricity, electricity_amount, has_coins, extra_features, image_url, badge, rent_price, image_url2, image_url3, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-    ).run(name, description || '', parsedMin, parsedMax, average_price, category || 'General', space_required || '2 m³', needs_electricity ? 1 : 0, electricity_amount || '', has_coins ? 1 : 0, extra_features || '', image_url || '', badge || 'None', derivedRentPrice, image_url2 || '', image_url3 || '', status || 'active');
+      "INSERT INTO products (name, description, min_price, max_price, average_price, category, space_required, needs_electricity, electricity_amount, has_coins, extra_features, image_url, badge, rent_price, image_url2, image_url3, status, alt_text) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+    ).run(name, description || '', parsedMin, parsedMax, average_price, category || 'General', space_required || '2 m³', needs_electricity ? 1 : 0, electricity_amount || '', has_coins ? 1 : 0, extra_features || '', image_url || '', badge || 'None', derivedRentPrice, image_url2 || '', image_url3 || '', status || 'active', (alt_text || '').trim());
 
     const adminName = req.adminName || req.body.admin_name || 'Admin';
     logAction(adminName, 'Machines', 'New Machine Added', `${name} added`, `New machine '${name}' added. Category: ${category || 'General'}`, 0, name);
@@ -89,7 +89,7 @@ exports.addProduct = async (req, res) => {
 };
 
 exports.updateProduct = async (req, res) => {
-  const { name, description, min_price, max_price, category, space_required, needs_electricity, electricity_amount, has_coins, extra_features, image_url, badge, image_url2, image_url3, status } = req.body;
+  const { name, description, min_price, max_price, category, space_required, needs_electricity, electricity_amount, has_coins, extra_features, image_url, badge, image_url2, image_url3, status, alt_text } = req.body;
   const hasBothPrices = min_price !== undefined && max_price !== undefined && min_price !== '' && max_price !== '';
   if (hasBothPrices) {
     const parsedMin = parseFloat(min_price);
@@ -112,12 +112,13 @@ exports.updateProduct = async (req, res) => {
         extra_features = COALESCE(?, extra_features), image_url = COALESCE(?, image_url),
         badge = COALESCE(?, badge), rent_price = COALESCE(?, rent_price),
         image_url2 = COALESCE(?, image_url2), image_url3 = COALESCE(?, image_url3),
-        status = COALESCE(?, status)
+        status = COALESCE(?, status), alt_text = COALESCE(?, alt_text)
       WHERE id = ?
     `).run(name, description, min_price, max_price, average_price, category, space_required,
       needs_electricity !== undefined ? (needs_electricity ? 1 : 0) : null,
       electricity_amount, has_coins !== undefined ? (has_coins ? 1 : 0) : null,
-      extra_features, image_url, badge, rent_price, image_url2, image_url3, status, req.params.id);
+      extra_features, image_url, badge, rent_price, image_url2, image_url3, status,
+      typeof alt_text === 'string' ? alt_text.trim() : null, req.params.id);
 
     const adminName = req.adminName || req.body.admin_name || 'Admin';
     logAction(adminName, 'Machines', 'Machine Updated', `${name || 'Machine'} details changed`, `Machine updated. Status: ${status || 'active'}`, 0, name || 'General');

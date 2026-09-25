@@ -6,6 +6,7 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import { ImageWithFallback } from '../../components/figma/ImageWithFallback';
 import { Seo } from '../../components/Seo';
 import { API_BASE_URL } from '../../config';
+import { productAlt } from '../../utils/productAlt';
 
 type LabelType = 'new' | 'trend' | 'sale';
 interface Game {
@@ -156,7 +157,7 @@ export function Catalog() {
                   transition={{ delay: Math.min(index * 0.04, 0.4), duration: 0.4 }}
                   onClick={() => navigate(`/product/${game.id}`)}>
                   <div className="relative aspect-square sm:aspect-[4/3] overflow-hidden bg-gray-50">
-                    <ImageWithFallback src={game.image_url} alt={game.title} displayWidth={300}
+                    <ImageWithFallback src={game.image_url} alt={productAlt(game)} displayWidth={300}
                       className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
                     
                     <div className="absolute top-2 left-2 px-2.5 py-1 rounded-md shadow-md z-10" style={{ backgroundColor: '#1a2332' }}>

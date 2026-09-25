@@ -104,6 +104,7 @@ export function KouraArea() {
         { label: 'See all the games', to: '/catalog' },
       ]}
       jsonLd={[serviceSchema]}
+      caseStudyPlaces={['Koura', 'Amioun', 'Kousba', 'Balamand']}
     />
   );
 }

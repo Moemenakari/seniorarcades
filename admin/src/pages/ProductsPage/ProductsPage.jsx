@@ -139,7 +139,7 @@ const Products = () => {
   const [form, setForm] = useState({
     name: '', description: '', min_price: '', max_price: '', category: 'General',
     space_required: '2 m³', needs_electricity: false, electricity_amount: '',
-    has_coins: false, extra_features: '', image_url: '', image_url2: '', image_url3: '', badge: 'None', status: 'active',
+    has_coins: false, extra_features: '', alt_text: '', image_url: '', image_url2: '', image_url3: '', badge: 'None', status: 'active',
     space_mode: 'preset', custom_space_required: '', badge_mode: 'preset', custom_badge: ''
   });
 
@@ -218,7 +218,7 @@ const Products = () => {
     setForm({ 
       name: '', description: '', min_price: '', max_price: '', category: 'General', 
       space_required: '2 m³', needs_electricity: false, electricity_amount: '', 
-      has_coins: false, extra_features: '', image_url: '', image_url2: '', image_url3: '', badge: 'None', status: 'active',
+      has_coins: false, extra_features: '', alt_text: '', image_url: '', image_url2: '', image_url3: '', badge: 'None', status: 'active',
       space_mode: 'preset', custom_space_required: '', badge_mode: 'preset', custom_badge: ''
     });
   };
@@ -254,6 +254,7 @@ const Products = () => {
       electricity_amount: game.electricity_amount || '',
       has_coins: !!game.has_coins,
       extra_features: game.extra_features || '',
+      alt_text: game.alt_text || '',
       image_url: game.image_url || '',
       image_url2: game.image_url2 || '',
       image_url3: game.image_url3 || '',
@@ -418,6 +419,13 @@ const Products = () => {
             <div className="space-y-2 md:col-span-2">
               <label className="text-sm font-black text-slate-400 uppercase tracking-widest ml-1">Extra Features</label>
               <input type="text" className="premium-input" placeholder="e.g. LED lights, sound system" value={form.extra_features} onChange={e => setForm({...form, extra_features: e.target.value})} />
+            </div>
+            <div className="space-y-2 md:col-span-2">
+              <label className="text-sm font-black text-slate-400 uppercase tracking-widest ml-1">Photo Description (for Google)</label>
+              <input type="text" maxLength={125} className="premium-input" placeholder="e.g. Boxing machine set up at a university event in Tripoli" value={form.alt_text} onChange={e => setForm({...form, alt_text: e.target.value})} />
+              <p className="text-xs text-slate-400 ml-1">
+                Describe what the photos show, in English. Google Images reads this. Leave empty and the site uses "{form.name || 'Game name'} rental in Lebanon".
+              </p>
             </div>
             <div className="md:col-span-2">
               <button type="submit" className="btn-navy w-full flex items-center justify-center gap-3">

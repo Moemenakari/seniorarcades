@@ -20,6 +20,7 @@ import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { ChevronRight, CheckCircle2, ArrowRight, MessageCircle } from 'lucide-react';
 import { Seo } from './Seo';
+import { CaseStudies } from './CaseStudies';
 
 const SITE_URL = 'https://nlgarcadesforevents.vercel.app';
 const WHATSAPP_NUMBER = '96103919876';
@@ -67,12 +68,14 @@ export interface LandingPageProps {
   related?: LandingLink[];
   /** Extra structured data (Service, Product, ...) for this page. */
   jsonLd?: object[];
+  /** Area names; shows recorded case studies whose place matches one. */
+  caseStudyPlaces?: string[];
 }
 
 export function LandingPage({
   kicker, h1, lead, title, description, canonical,
   breadcrumb, sections, faqs, whatsappMessage,
-  ctaHeading, ctaBody, related = [], jsonLd = [],
+  ctaHeading, ctaBody, related = [], jsonLd = [], caseStudyPlaces,
 }: LandingPageProps) {
   const whatsappHref = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(whatsappMessage)}`;
 
@@ -181,6 +184,9 @@ export function LandingPage({
           ))}
         </div>
       </section>
+
+      {/* ── CASE STUDIES (only when the admin has entered real data) ── */}
+      {caseStudyPlaces && <CaseStudies places={caseStudyPlaces} heading="Recent events in this area" />}
 
       {/* ── FAQ ── */}
       {faqs.length > 0 && (
