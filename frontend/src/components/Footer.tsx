@@ -64,9 +64,9 @@ export function Footer() {
                 lineHeight: "1.6",
               }}
             >
-              Lebanon's premier arcade entertainment provider,
-              creating unforgettable experiences at events
-              nationwide.
+              Arcade and carnival games for rent and for sale,
+              based in Tripoli and serving events across
+              Lebanon.
             </p>
           </div>
 

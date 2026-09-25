@@ -140,11 +140,16 @@ export function ProductDetails() {
     ? (ratings.reduce((acc, r) => acc + r.rating, 0) / ratings.length).toFixed(1)
     : 'N/A';
 
-  const priceRange = useMemo(() => {
-    const min = product?.price?.min ?? product?.min_price;
-    const max = product?.price?.max ?? product?.max_price;
-    if (typeof min === 'number' && typeof max === 'number') return `$${min} - $${max}`;
-    return 'Ask for price';
+  // Daily rental prices. Number() because older API responses sent them as
+  // strings ("70"); a 0 is the column default, so it counts as no price.
+  const prices = useMemo(() => {
+    const min = Number(product?.price?.min ?? product?.min_price);
+    const max = Number(product?.price?.max ?? product?.max_price);
+    if (!(min > 0)) return null;
+    const top = max >= min ? max : min;
+    const avgFromApi = Number(product?.price?.average ?? product?.average_price);
+    const average = avgFromApi > 0 ? avgFromApi : (min + top) / 2;
+    return { min, average: Math.round(average), max: top };
   }, [product]);
 
   const images = useMemo(() => {
@@ -308,11 +313,39 @@ export function ProductDetails() {
               <span className="text-xs text-gray-400">({ratings.length} reviews)</span>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 mb-5">
-              <div className="bg-gray-50 rounded-xl border border-gray-100 p-3">
-                <p className="text-[11px] uppercase tracking-wider text-gray-500 font-bold">Price Range</p>
-                <p className="text-sm font-bold text-[#1a2332]">{priceRange}</p>
+            {/* Price card: minimum, average and maximum daily rental price */}
+            {prices ? (
+              <div className="rounded-2xl border-2 border-[#FFD700] bg-[#fffbea] p-4 mb-5">
+                <p className="text-[11px] uppercase tracking-wider text-gray-500 font-bold mb-3">Rental price per day (USD)</p>
+                <div className="grid grid-cols-3 gap-2 text-center">
+                  <div className="bg-white rounded-xl border border-gray-100 py-3 px-1">
+                    <p className="text-[10px] sm:text-[11px] uppercase tracking-wider text-gray-500 font-bold">Minimum</p>
+                    <p className="text-lg sm:text-2xl font-black text-[#1a2332]" style={{ fontFamily: 'Montserrat, sans-serif' }}>${prices.min}</p>
+                  </div>
+                  <div className="bg-[#1a2332] rounded-xl py-3 px-1">
+                    <p className="text-[10px] sm:text-[11px] uppercase tracking-wider text-white/70 font-bold">Average</p>
+                    <p className="text-lg sm:text-2xl font-black text-[#FFD700]" style={{ fontFamily: 'Montserrat, sans-serif' }}>${prices.average}</p>
+                  </div>
+                  <div className="bg-white rounded-xl border border-gray-100 py-3 px-1">
+                    <p className="text-[10px] sm:text-[11px] uppercase tracking-wider text-gray-500 font-bold">Maximum</p>
+                    <p className="text-lg sm:text-2xl font-black text-[#1a2332]" style={{ fontFamily: 'Montserrat, sans-serif' }}>${prices.max}</p>
+                  </div>
+                </div>
+                <p className="text-xs text-gray-500 mt-3" style={{ fontFamily: 'Open Sans, sans-serif' }}>
+                  The final price depends on the number of days and the location.
+                </p>
               </div>
+            ) : (
+              <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4 mb-5">
+                <p className="text-sm font-bold text-[#1a2332]">Ask for price</p>
+                <a href={`https://wa.me/96103919876?text=${encodeURIComponent(`Hi, what is the rental price of the ${product.name}?`)}`}
+                  target="_blank" rel="noopener noreferrer" className="text-sm font-semibold text-[#128C7E] hover:underline">
+                  WhatsApp 03 919 876
+                </a>
+              </div>
+            )}
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-5">
               <div className="bg-gray-50 rounded-xl border border-gray-100 p-3">
                 <p className="text-[11px] uppercase tracking-wider text-gray-500 font-bold">Space Required</p>
                 <p className="text-sm font-bold text-[#1a2332]">{product.space_required || 'N/A'}</p>
@@ -321,7 +354,7 @@ export function ProductDetails() {
                 <p className="text-[11px] uppercase tracking-wider text-gray-500 font-bold">Power (AMP)</p>
                 <p className="text-sm font-bold text-[#1a2332]">{product.electricity_amount || 'No power needed'}</p>
               </div>
-              <div className="bg-gray-50 rounded-xl border border-gray-100 p-3">
+              <div className="bg-gray-50 rounded-xl border border-gray-100 p-3 col-span-2 sm:col-span-1">
                 <p className="text-[11px] uppercase tracking-wider text-gray-500 font-bold">Coin System</p>
                 <p className="text-sm font-bold text-[#1a2332]">{product.has_coins ? 'Works with coin' : 'No coin required'}</p>
               </div>

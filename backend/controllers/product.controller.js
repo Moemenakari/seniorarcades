@@ -3,11 +3,19 @@ const { logAction } = require('../utils/logger');
 
 const formatAvailability = (status) => (status === 'active' ? 'available' : 'unavailable');
 
+// Postgres returns NUMERIC columns as strings ("70"). Pages check for a
+// number before showing a price, so a string made them print "Ask for
+// price" on games that have one. Prices leave the API as numbers.
+const toNumber = (value) => (value === null || value === undefined || value === '' ? null : Number(value));
+
 const toProductResponse = (product) => ({
   ...product,
+  min_price: toNumber(product.min_price),
+  max_price: toNumber(product.max_price),
+  average_price: toNumber(product.average_price),
   title: product.name,
   power_usage: product.electricity_amount,
-  price: { min: product.min_price, max: product.max_price, average: product.average_price },
+  price: { min: toNumber(product.min_price), max: toNumber(product.max_price), average: toNumber(product.average_price) },
   images: [product.image_url, product.image_url2, product.image_url3].filter(Boolean),
   availability: formatAvailability(product.status)
 });
