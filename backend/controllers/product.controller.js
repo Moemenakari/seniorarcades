@@ -65,7 +65,9 @@ exports.getProduct = async (req, res) => {
 };
 
 exports.addProduct = async (req, res) => {
-  const { name, description, min_price, max_price, category, space_required, needs_electricity, electricity_amount, has_coins, extra_features, image_url, badge, image_url2, image_url3, status, alt_text } = req.body;
+  const { description, min_price, max_price, category, space_required, needs_electricity, electricity_amount, has_coins, extra_features, image_url, badge, image_url2, image_url3, status, alt_text } = req.body;
+  // A stray space typed after the name ends up in page titles and headings.
+  const name = typeof req.body.name === 'string' ? req.body.name.trim() : req.body.name;
   const parsedMin = parseFloat(min_price);
   const parsedMax = parseFloat(max_price);
   if (!name || Number.isNaN(parsedMin) || Number.isNaN(parsedMax) || parsedMin < 0 || parsedMax < 0 || parsedMin > parsedMax) {
@@ -89,7 +91,8 @@ exports.addProduct = async (req, res) => {
 };
 
 exports.updateProduct = async (req, res) => {
-  const { name, description, min_price, max_price, category, space_required, needs_electricity, electricity_amount, has_coins, extra_features, image_url, badge, image_url2, image_url3, status, alt_text } = req.body;
+  const { description, min_price, max_price, category, space_required, needs_electricity, electricity_amount, has_coins, extra_features, image_url, badge, image_url2, image_url3, status, alt_text } = req.body;
+  const name = typeof req.body.name === 'string' ? req.body.name.trim() : req.body.name;
   const hasBothPrices = min_price !== undefined && max_price !== undefined && min_price !== '' && max_price !== '';
   if (hasBothPrices) {
     const parsedMin = parseFloat(min_price);
