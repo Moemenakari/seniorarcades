@@ -3,6 +3,12 @@
 **Date:** June 2026
 **Goal:** Deploy a full-stack arcade rental platform for free online
 
+> **Update (Oct 2026):** This journal records the first deployment, which used
+> **Supabase** for the database and image storage. We tried Supabase and later
+> **moved to Neon (database) and ImageKit (images)**. The live project no longer
+> uses Supabase and the Supabase project has been deleted. Steps 3, 6 and 7 are
+> kept as history only. See "Moving from Supabase to Neon" at the end.
+
 ---
 
 ## What We Built
@@ -380,9 +386,9 @@ After:  "Rent or Sell Arcade Games"
 
 ### How Passwords Are Stored
 - User passwords → hashed with `bcryptjs` (10 salt rounds)
-- Admin password → hardcoded check in frontend + master key header in backend
+- Admin access → a `users` table account with role `super` or `admin`, checked server-side (the old hardcoded password and master key were removed)
 - Database password → URL-encoded in `DATABASE_URL` env var (never committed to git)
-- JWT tokens → 30-day expiry, stored in HttpOnly cookies
+- JWT tokens → 30-day expiry, sent as `Authorization: Bearer`
 
 ---
 
@@ -395,8 +401,24 @@ After:  "Rent or Sell Arcade Games"
 | Transaction client not propagating | AsyncLocalStorage stores pg client per transaction |
 | `ENOTFOUND` on direct DB connection | Switched to Transaction Pooler (port 6543) |
 | `@@` double at-sign in DATABASE_URL | URL-encode `@` as `%40` in password |
-| Cloudinary not in Lebanon | Replaced with Supabase Storage (same project) |
+| Cloudinary not in Lebanon | Replaced with Supabase Storage, later with ImageKit |
 | React Router 404 on Vercel refresh | Added `vercel.json` rewrite rule |
 | CORS blocking Vercel → Render | Added `ALLOWED_ORIGINS` env var |
 | SQLite date functions in PostgreSQL | `datetime('now')` → `NOW()`, `strftime` → `TO_CHAR` |
 | `user` reserved word in PostgreSQL | Quoted as `"user"` in SQL |
+
+---
+
+## Moving from Supabase to Neon
+
+We tried Supabase first, then switched.
+
+| What | Before | Now |
+|---|---|---|
+| Database | Supabase PostgreSQL | **Neon PostgreSQL** |
+| Images | Supabase Storage | **ImageKit** |
+
+- The code only needed a new `DATABASE_URL`, because both are plain PostgreSQL and the `pg` adapter in `backend/config/db.js` did not change.
+- Neon pauses when idle and wakes on the first connection, so `db.js` waits up to 20 seconds and retries the first query once.
+- Images moved with `backend/scripts/migrate-images-to-imagekit.js`; uploads now go through `backend/utils/imagekitStorage.js`.
+- The `SUPABASE_URL` and `SUPABASE_SERVICE_KEY` variables are no longer used, and the Supabase project (`bvkxvzfyhcklulpvklni`) was deleted.

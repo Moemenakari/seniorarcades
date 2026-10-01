@@ -116,9 +116,9 @@ app.put('/api/settings/cycle', superProtect, async (req, res) => {
   try {
     const existing = await db.prepare("SELECT setting_key FROM settings WHERE setting_key = 'cycle_start_date'").get();
     if (existing) {
-      await db.prepare("UPDATE settings SET setting_value = ? WHERE setting_key = 'cycle_start_date'").run(start_date);
+      await db.prepare("UPDATE settings SET setting_value = $1 WHERE setting_key = 'cycle_start_date'").run(start_date);
     } else {
-      await db.prepare("INSERT INTO settings (setting_key, setting_value) VALUES ('cycle_start_date', ?)").run(start_date);
+      await db.prepare("INSERT INTO settings (setting_key, setting_value) VALUES ('cycle_start_date', $1)").run(start_date);
     }
     res.json({ success: true, start_date });
   } catch (err) {

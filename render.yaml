@@ -20,3 +20,5 @@ services:
         sync: false
       - key: ALLOWED_ORIGINS
         sync: false
+      - key: VERCEL_DEPLOY_HOOK_URL
+        sync: false

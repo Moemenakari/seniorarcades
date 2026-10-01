@@ -12,8 +12,8 @@ This repository contains the complete full-stack web application: public website
 | 🌐 Frontend (Public Website) | https://nlgarcadesforevents.vercel.app |
 | 🛠 Admin Panel | https://nlg-arcade-admin.vercel.app |
 | ⚙️ Backend API | https://nlg-arcade-backend.onrender.com |
-| 🗄 Database | Supabase PostgreSQL (eu-west-1) |
-| 🖼 Image Storage | Supabase Storage — bucket: `images` |
+| 🗄 Database | Neon PostgreSQL |
+| 🖼 Image Storage | ImageKit |
 
 ---
 
@@ -102,7 +102,7 @@ cookie in `auth.middleware.js` and `admin.middleware.js`, restoring
 | Backend | Node.js, Express.js, PostgreSQL (pg) |
 | Database | Neon PostgreSQL (migrated from Supabase, previously SQLite) |
 | Image Storage | ImageKit (migrated from Supabase Storage; Cloudinary is blocked in Lebanon) |
-| Backend Hosting | Render.com (Free tier) |
+| Backend Hosting | Render.com (Free tier; sleeps after ~15 min idle, so the first request can take up to a minute) |
 | Frontend Hosting | Vercel (Free tier) |
 
 ---
@@ -179,11 +179,14 @@ Same as Frontend but:
 
 ## Database
 
-- **Provider:** Supabase (PostgreSQL)
-- **Project ID:** `bvkxvzfyhcklulpvklni`
-- **Region:** AWS eu-west-1 (Europe)
-- **Connection:** Transaction Pooler on port `6543`
-- **Schema:** Run `backend/schema.sql` in Supabase SQL Editor to initialize
+- **Provider:** Neon (PostgreSQL)
+- **Connection:** `DATABASE_URL` env var, with `?sslmode=require`
+- **Schema:** Run `backend/schema.sql` once against the Neon database to initialize.
+  Later additive changes run automatically on server start (see `MIGRATIONS` in `backend/server.js`).
+
+> **History:** the project first ran on SQLite, then on Supabase (database and
+> storage). We moved to Neon for the database and ImageKit for images, so
+> nothing in the code uses Supabase any more. The Supabase project was deleted.
 
 ### Tables (17 total)
 
@@ -195,14 +198,13 @@ Same as Frontend but:
 
 ## Image Storage
 
-- **Provider:** Supabase Storage
-- **Bucket:** `images` (Public)
+- **Provider:** ImageKit (Supabase Storage was used first; Cloudinary is blocked in Lebanon)
 - **Upload Endpoint:** `POST /api/upload` (admin only, multipart/form-data, field: `image`)
 - **Delete Endpoint:** `DELETE /api/upload` (body: `{ url }`)
 - **Max file size:** 5MB
 - **Allowed types:** Images only (image/*)
 
-Images return a permanent public URL from Supabase CDN.
+Images return a permanent public URL from the ImageKit CDN.
 
 ---
 
@@ -211,8 +213,8 @@ Images return a permanent public URL from Supabase CDN.
 | Feature | Implementation |
 |---|---|
 | Password hashing | bcryptjs, 10 salt rounds |
-| Auth tokens | JWT, 30-day expiry, HttpOnly cookie |
-| Admin protection | Master key header `x-admin-master-key` |
+| Auth tokens | JWT, 30-day expiry, sent as `Authorization: Bearer` |
+| Admin protection | Database account with role `super` or `admin`, verified server-side |
 | CORS | Whitelist of Vercel domains only (production) |
 | SQL injection | Parameterized queries (`$1, $2...`) via `pg` |
 | File upload | Type + size validation via multer |
@@ -268,8 +270,8 @@ nlgarcades/
 │   ├── routes/                   # Express routes (10 route files)
 │   ├── utils/
 │   │   ├── logger.js             # Audit log helper
-│   │   └── supabaseStorage.js    # Supabase Storage upload/delete
-│   ├── schema.sql                # PostgreSQL schema (run once in Supabase)
+│   │   └── imagekitStorage.js    # ImageKit upload/delete
+│   ├── schema.sql                # PostgreSQL schema (run once on Neon)
 │   ├── server.js                 # Express app entry point
 │   └── .env                      # Local secrets (not committed)
 │
@@ -307,12 +309,12 @@ nlgarcades/
 | POST | `/api/auth/register` | Register new user |
 | POST | `/api/auth/login` | Login user |
 
-### Admin (requires `x-admin-master-key` header)
+### Admin (requires an admin `Authorization: Bearer <token>`)
 
 | Method | Endpoint | Description |
 |---|---|---|
-| POST | `/api/upload` | Upload image to Supabase Storage |
-| DELETE | `/api/upload` | Delete image from Supabase Storage |
+| POST | `/api/upload` | Upload image to ImageKit |
+| DELETE | `/api/upload` | Delete image from ImageKit |
 | GET | `/api/dashboard` | Dashboard KPIs |
 | GET/POST/PUT/DELETE | `/api/events` | Event management |
 | GET/POST/PUT/DELETE | `/api/products` | Machine catalog |
